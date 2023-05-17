@@ -35,6 +35,7 @@ class TenantManager(models.Manager):
         user.is_superuser = True
         user.is_staff = True
         user.save()
+        print(tenant, "=====", username, password, tenant_address)
         tenant.is_superuser = True
         tenant.is_staff = True
         tenant.save()
