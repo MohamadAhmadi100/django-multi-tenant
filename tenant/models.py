@@ -1,17 +1,13 @@
 import uuid
 
-from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models, transaction
-from django.db.models.signals import post_save
-from django.contrib.auth.base_user import BaseUserManager
 
 
 class TenantManager(models.Manager):
 
     @transaction.atomic
     def create_account(self, tenant_name, username, password, tenant_address=None):
-
         tenant = Tenant(
             name=tenant_name,
             address=tenant_address,
@@ -32,13 +28,15 @@ class TenantManager(models.Manager):
             raise TypeError('Superusers must have a password.')
 
         tenant, user = self.create_account(tenant, username, password, tenant_address)
-        user.is_superuser = True
-        user.is_staff = True
-        user.save()
-        print(tenant, "=====", username, password, tenant_address)
+        tenant.id = uuid.uuid4()
         tenant.is_superuser = True
         tenant.is_staff = True
+        user.is_superuser = True
+        user.is_staff = True
+        tenant.id = uuid.uuid4()
+        user.save()
         tenant.save()
+
         return tenant, user
 
 
@@ -59,7 +57,7 @@ class Tenant(models.Model):
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey(Tenant, related_name='%(class)s', on_delete=models.CASCADE)
+    tenant = models.ForeignKey(Tenant, related_name='users', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -70,16 +68,11 @@ class User(AbstractUser):
 
 
 class TenantRelatedModel(models.Model):
-
-    # TODO: if this id is defined here, isn't each id in certain field needed?? -> may not be needed.
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tenant = models.ForeignKey('accounts.Tenant', related_name='%(class)s', on_delete=models.PROTECT, editable=False)
 
     class Meta:
         abstract = True
-
-
-
 
 # from django.db import models
 # from django.contrib.auth.models import AbstractBaseUser
