@@ -1,5 +1,6 @@
-from . import api_views
 from django.urls import path
+
+from . import api_views
 
 urlpatterns = [
     path('', api_views.AccountCreate.as_view(), name=api_views.AccountCreate.name),
@@ -7,9 +8,3 @@ urlpatterns = [
     path('users/<uuid:pk>', api_views.UserDetail.as_view(), name=api_views.UserDetail.name),
     path('tenant/', api_views.TenantDetail.as_view(), name=api_views.TenantDetail.name),
 ]
-# router = routers.DefaultRouter()
-# router.register('user', UserView.as_view(), basename='user')
-# urlpatterns = router.urls
-# urlpatterns = [
-#     path("user/", UserView.as_view())
-# ]

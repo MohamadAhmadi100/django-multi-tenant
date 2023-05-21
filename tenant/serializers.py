@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+
 from .models import Tenant
 
 User = get_user_model()
@@ -41,7 +42,6 @@ class TenantSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class AccountSerializer(serializers.Serializer):
-
     tenant = TenantSerializer()
     user = UserSerializer()
 
@@ -60,24 +60,3 @@ class AccountSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         raise NotImplementedError('Cannot call update() on an account')
-
-# from rest_framework import serializers
-# from django.contrib.auth import get_user_model
-#
-# User = get_user_model()
-#
-#
-# class CreateUserSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = User
-#         fields = ('email', 'username', 'password')
-#         extra_kwargs = {'password': {'write_only': True}}
-#
-#     def create(self, validated_data):
-#         user = User(
-#             email=validated_data['email'],
-#             username=validated_data['username']
-#         )
-#         user.set_password(validated_data['password'])
-#         user.save()
-#         return user

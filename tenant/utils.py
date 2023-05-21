@@ -1,27 +1,27 @@
-import warnings
 import uuid
-from datetime import datetime
+import warnings
 from calendar import timegm
+from datetime import datetime
+from functools import wraps
 
 import jwt
 from django.contrib.auth import authenticate
-
-from functools import wraps
+from django.contrib.auth import get_user_model
 from django.http import JsonResponse
+from rest_framework_simplejwt.settings import api_settings
 
-from rest_framework_jwt.compat import get_username_field
-from rest_framework_jwt.settings import api_settings
+User = get_user_model()
 
 
 def get_username(jwt):
-    username = jwt.get('nickname')  # nickname is equal to username in Auth0
+    username = jwt.get('username')
     tenant = jwt.get('https://next-ocr.io/tenant')
     authenticate(remote_user=username, tenant=tenant)
     return username
 
 
 def jwt_payload_handler(user):
-    username_field = get_username_field()
+    username_field = User.USERNAME_FIELD
     username = get_username(user)
 
     warnings.warn(
@@ -45,8 +45,6 @@ def jwt_payload_handler(user):
 
     payload[username_field] = username
 
-    # Include original issued at time for a brand new token,
-    # to allow token refresh
     if api_settings.JWT_ALLOW_REFRESH:
         payload['orig_iat'] = timegm(
             datetime.utcnow().utctimetuple()
@@ -62,35 +60,11 @@ def jwt_payload_handler(user):
 
 
 def jwt_decode_handler(token):
-    # FIXME: need to validate jwt
-    #options = {
-    #    'verify_exp': api_settings.JWT_VERIFY_EXPIRATION,
-    #}
-    ## get user from token, BEFORE verification, to get user secret key
-    #unverified_payload = jwt.decode(token, None, False)
-    #secret_key = jwt_get_secret_key(unverified_payload)
-    #jwt_ = jwt.decode(
-    #    token,
-    #    api_settings.JWT_PUBLIC_KEY or secret_key,
-    #    api_settings.JWT_VERIFY,
-    #    options=options,
-    #    leeway=api_settings.JWT_LEEWAY,
-    #    audience=api_settings.JWT_AUDIENCE,
-    #    issuer=api_settings.JWT_ISSUER,
-    #    algorithms=[api_settings.JWT_ALGORITHM]
-    #)
     jwt_ = jwt.decode(token, verify=False)
     return jwt_
 
 
 def jwt_get_secret_key(payload=None):
-    """
-    For enhanced security you may want to use a secret key based on user.
-    This way you have an option to logout only this user if:
-        - token is compromised
-        - password is changed
-        - etc.
-    """
     if api_settings.JWT_GET_USER_SECRET_KEY:
         User = get_user_model()  # noqa: N806
         user = User.objects.get(pk=payload.get('user_id'))
@@ -106,18 +80,12 @@ class JWTManager:
 
     @staticmethod
     def get_token_auth_header(request):
-        """Obtains the Access Token from the Authorization Header
-        """
         auth = request.META.get("HTTP_AUTHORIZATION", None)
         token = auth.split()[1]
         return token
 
     @staticmethod
     def requires_scope(required_scope):
-        """Determines if the required scope is present in the Access Token
-        Args:
-            required_scope (str): The scope required to access the resource
-        """
         def require_scope(f):
             @wraps(f)
             def decorated(*args, **kwargs):
@@ -130,5 +98,7 @@ class JWTManager:
                 response = JsonResponse({'message': 'You don\'t have access to this resource'})
                 response.status_code = 403
                 return response
+
             return decorated
+
         return require_scope
