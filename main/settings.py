@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     "djoser",
     "corsheaders",
     'drf_yasg',
-    'rest_framework_auth0',
+    # 'rest_framework_auth0',
     # 'rest_framework_jwt',
     # apps
     'tenant.apps.TenantConfig',
@@ -103,14 +103,14 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 REST_FRAMEWORK = {
-    # 'DEFAULT_PERMISSION_CLASSES': (
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
         # 'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        # 'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ),
     # 'DEFAULT_FILTER_BACKENDS': (
     #     'django_filters.rest_framework.DjangoFilterBackend',
@@ -139,16 +139,16 @@ cert = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0]
 certificate = load_pem_x509_certificate(str.encode(cert), default_backend())
 publickey = certificate.public_key()
 JWT_AUTH = {
+    # 'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
     'JWT_PAYLOAD_HANDLER': 'tenant.utils.jwt_payload_handler',
-    'JWT_DECODE_HANDLER': 'tenant.utils.jwt_decode_handler',
+    'JWT_DECODE_HANDLER': 'tenant.utils.jwt_get_username_from_payload_handler',
     'JWT_PUBLIC_KEY': publickey,
     'JWT_ALGORITHM': 'RS256',
     'JWT_AUDIENCE': AUTH0_API_IDENTIFIER,
     'JWT_ISSUER': AUTH0_DOMAIN + '/',
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 }
-
 AUTH0 = {
     'CLIENTS': {
         'default': {
