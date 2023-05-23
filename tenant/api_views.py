@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
 from . import serializers
+from rest_framework_auth0.authentication import Auth0JSONWebTokenAuthentication
+
 
 User = get_user_model()
 
@@ -46,7 +48,7 @@ class UserDetail(generics.RetrieveUpdateDestroyAPIView):
 class TenantDetail(generics.RetrieveUpdateAPIView):
     name = 'tenant-detail'
     permission_classes = (
-        permissions.IsAuthenticated,
+        Auth0JSONWebTokenAuthentication,
     )
     serializer_class = serializers.TenantSerializer
 

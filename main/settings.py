@@ -14,6 +14,9 @@ AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_CLIENT_ID = os.getenv("AUTH0_CLIENT_ID")
 AUTH0_CLIENT_SECRET = os.getenv("AUTH0_CLIENT_SECRET")
 AUTH0_API_IDENTIFIER = os.getenv("AUTH0_API_IDENTIFIER")
+AUTH0_MANAGEMENT_API_CLIENT_ID = os.getenv("AUTH0_MANAGEMENT_API_CLIENT_ID")
+AUTH0_MANAGEMENT_API_CLIENT_SECRET = os.getenv("AUTH0_MANAGEMENT_API_CLIENT_SECRET")
+AUTH0_CALLBACK_URL = os.getenv("AUTH0_CALLBACK_URL")
 
 DATABASE_NAME = os.getenv('DATABASE_NAME'),
 DATABASE_USER = os.getenv('DATABASE_USER'),
@@ -36,11 +39,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # 3rd party apps
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
     "corsheaders",
     'drf_yasg',
+    'rest_framework_auth0',
+    # 'rest_framework_jwt',
+    # apps
     'tenant.apps.TenantConfig',
 ]
 
@@ -53,7 +60,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'corsheaders.middleware.CorsMiddleware',
 ]
@@ -143,6 +149,22 @@ JWT_AUTH = {
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
 }
 
+AUTH0 = {
+    'CLIENTS': {
+        'default': {
+            'AUTH0_CLIENT_ID': AUTH0_CLIENT_ID,
+            'AUTH0_AUDIENCE': AUTH0_API_IDENTIFIER,
+            'AUTH0_ALGORITHM': 'RS256',
+            'PUBLIC_KEY': publickey,
+        }
+    },
+    'MANAGEMENT_API': {
+        'AUTH0_DOMAIN': AUTH0_DOMAIN,
+        'AUTH0_CLIENT_ID': AUTH0_MANAGEMENT_API_CLIENT_ID,
+        'AUTH0_CLIENT_SECRET': AUTH0_MANAGEMENT_API_CLIENT_SECRET
+    }
+}
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -169,3 +191,5 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CORS_ORIGIN_ALLOW_ALL = True
