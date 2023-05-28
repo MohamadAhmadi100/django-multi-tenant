@@ -12,7 +12,19 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
+    authentication_classes=[]
 )
+# swagger_view = schema_view.with_ui('swagger')
+
+jwt_token_security = openapi.SecurityRequirement(
+    scheme="Bearer",  # Scheme name for the token (e.g., "Bearer")
+    type="http",      # Security type (e.g., "http")
+    description="Bearer Token",  # Description for the security requirement
+    name="Authorization",        # Header name for the token
+    in_=openapi.IN_HEADER,       # Location of the token in the request
+)
+
+schema_view.security = [jwt_token_security]
 app_name = "tenant"
 
 urlpatterns = [

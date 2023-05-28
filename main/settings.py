@@ -64,6 +64,25 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
+SWAGGER_SETTINGS = {
+   'USE_SESSION_AUTH': False,
+   'SECURITY_DEFINITIONS': {
+      'Your App API - Swagger': {
+         'type': 'oauth2',
+         'authorizationUrl': '/yourapp/o/authorize',
+         'tokenUrl': '/yourapp/o/token/',
+         'flow': 'accessCode',
+         'scopes': {
+          'read:groups': 'read groups',
+         }
+      }
+   },
+   'OAUTH2_CONFIG': {
+      'clientId': 'yourAppClientId',
+      'clientSecret': 'yourAppClientSecret',
+      'appName': 'your application name'
+   },
+}
 ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [
