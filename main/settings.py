@@ -2,11 +2,13 @@ import json
 import os
 import textwrap
 from pathlib import Path
-
+from cryptography.hazmat.primitives.asymmetric import rsa
+import cryptography.x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from dotenv import load_dotenv
 from six.moves.urllib import request
+from cryptography.hazmat.primitives import serialization
 
 load_dotenv()
 
@@ -65,23 +67,13 @@ MIDDLEWARE = [
 ]
 
 SWAGGER_SETTINGS = {
-   'USE_SESSION_AUTH': False,
-   'SECURITY_DEFINITIONS': {
-      'Your App API - Swagger': {
-         'type': 'oauth2',
-         'authorizationUrl': '/yourapp/o/authorize',
-         'tokenUrl': '/yourapp/o/token/',
-         'flow': 'accessCode',
-         'scopes': {
-          'read:groups': 'read groups',
-         }
-      }
-   },
-   'OAUTH2_CONFIG': {
-      'clientId': 'yourAppClientId',
-      'clientSecret': 'yourAppClientSecret',
-      'appName': 'your application name'
-   },
+    'SECURITY_DEFINITIONS': {
+        'DRF Token': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
 }
 ROOT_URLCONF = 'main.urls'
 
@@ -154,15 +146,17 @@ IMPORT_STRINGS = (
 jsonurl = request.urlopen(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
 jwks = json.loads(jsonurl.read())
 t = textwrap.fill(jwks['keys'][0]['x5c'][0])
-cert = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
-certificate = load_pem_x509_certificate(str.encode(cert), default_backend())
-publickey = certificate.public_key()
+CERT = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
+with open("certificate/cert.pem", 'wb+') as f:
+    print(serialization.load_pem_private_key(f.read(), password=None))
+CERTIFICATE = load_pem_x509_certificate(str.encode(CERT), default_backend())
+PUBLICKEY = CERTIFICATE.public_key()
 JWT_AUTH = {
     # 'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
     'JWT_PAYLOAD_HANDLER': 'tenant.utils.jwt_payload_handler',
     'JWT_DECODE_HANDLER': 'tenant.utils.jwt_get_username_from_payload_handler',
-    'JWT_PUBLIC_KEY': publickey,
+    'JWT_PUBLIC_KEY': PUBLICKEY,
     'JWT_ALGORITHM': 'RS256',
     'JWT_AUDIENCE': AUTH0_API_IDENTIFIER,
     'JWT_ISSUER': AUTH0_DOMAIN + '/',
@@ -174,7 +168,7 @@ AUTH0 = {
             'AUTH0_CLIENT_ID': AUTH0_CLIENT_ID,
             'AUTH0_AUDIENCE': AUTH0_API_IDENTIFIER,
             'AUTH0_ALGORITHM': 'RS256',
-            'PUBLIC_KEY': publickey,
+            'PUBLIC_KEY': PUBLICKEY,
         }
     },
     'MANAGEMENT_API': {

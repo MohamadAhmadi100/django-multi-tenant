@@ -39,10 +39,10 @@ MANIFEST
 
 *.manifest
 *.spec
-
+*.pem
 pip-log.txt
 pip-delete-this-directory.txt
-
+certificate/
 htmlcov/
 .tox/
 .nox/

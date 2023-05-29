@@ -1,40 +1,72 @@
-from authlib.integrations.django_oauth2 import ResourceProtector
-from django.http import JsonResponse
-from . import validator
+import auth0
+from auth0.authentication import GetToken
 from django.conf import settings
 from rest_framework.decorators import api_view
+from django.http import JsonResponse
+from .serializers import UserSerializer
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
+param = openapi.Parameter('test', openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN)
 
 
-require_auth = ResourceProtector()
-validator = validator.Auth0JWTBearerTokenValidator(
-    settings.AUTH0_DOMAIN,
-    settings.AUTH0_API_IDENTIFIER
-)
-require_auth.register_token_validator(validator)
-
-
-def public(request):
-    """No access token required to access this route
-    """
-    response = "Hello from a public endpoint! You don't need to be authenticated to see this."
-    return JsonResponse(dict(message=response))
-
-
-@require_auth(None)
-def private(request):
-    """A valid access token is required to access this route
-    """
-    response = "Hello from a private endpoint! You need to be authenticated to see this."
-    return JsonResponse(dict(message=response))
-
-
-@require_auth("read:messages")
+@swagger_auto_schema(methods=['post'], request_body=UserSerializer)
 @api_view(['POST'])
-def private_scoped(request):
-    """A valid access token and an appropriate scope are required to access this route
-    """
-    response = "Hello from a private endpoint! You need to be authenticated and have a scope of read:messages to see this."
-    return JsonResponse(dict(message=response))
+def login(request):
+    print(request.headers)
+    token = GetToken(domain=settings.AUTH0_DOMAIN, client_id=settings.AUTH0_CLIENT_ID,
+                     client_assertion_signing_key=settings.CERT, client_assertion_signing_alg="RS256")
+    token.login(username=request.data['username'], password=request.data['password'],
+                realm="Username-Password-Authentication")
+    # print(token.get())
+    # credentials = token.client_credentials(settings.AUTH0_API_IDENTIFIER)
+    # print(credentials)
+    return JsonResponse(dict(message="token"))
+
+# from authlib.integrations.django_oauth2 import ResourceProtector
+# from django.http import JsonResponse
+# from . import validator
+# from django.conf import settings
+# from rest_framework.decorators import api_view
+# from auth0.authentication import Database
+#
+# database = Database('my-domain.us.auth0.com', 'my-client-id')
+#
+# database.signup(email='user@domain.com', password='secr3t', connection='Username-Password-Authentication')
+# require_auth = ResourceProtector()
+# validator = validator.Auth0JWTBearerTokenValidator(
+#     settings.AUTH0_DOMAIN,
+#     settings.AUTH0_API_IDENTIFIER
+# )
+# print(validator)
+# require_auth.register_token_validator(validator)
+#
+#
+# def public(request):
+#     """No access token required to access this route
+#     """
+#     response = "Hello from a public endpoint! You don't need to be authenticated to see this."
+#     return JsonResponse(dict(message=response))
+#
+#
+# @require_auth(None)
+# def private(request):
+#     """A valid access token is required to access this route
+#     """
+#     response = "Hello from a private endpoint! You need to be authenticated to see this."
+#     return JsonResponse(dict(message=response))
+#
+#
+# # @api_view(['POST'])
+# # def register(request):
+# #     ser
+# @require_auth("read:messages")
+# @api_view(['POST'])
+# def private_scoped(request):
+#     """A valid access token and an appropriate scope are required to access this route
+#     """
+#     response = "Hello from a private endpoint! You need to be authenticated and have a scope of read:messages to see this."
+#     return JsonResponse(dict(message=response))
 
 # from django.contrib.auth import get_user_model
 # from rest_framework import generics, permissions
