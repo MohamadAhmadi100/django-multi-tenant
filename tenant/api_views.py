@@ -13,11 +13,11 @@ param = openapi.Parameter('test', openapi.IN_QUERY, type=openapi.TYPE_BOOLEAN)
 @swagger_auto_schema(methods=['post'], request_body=UserSerializer)
 @api_view(['POST'])
 def login(request):
-    print(request.headers)
     token = GetToken(domain=settings.AUTH0_DOMAIN, client_id=settings.AUTH0_CLIENT_ID,
-                     client_assertion_signing_key=settings.CERT, client_assertion_signing_alg="RS256")
-    token.login(username=request.data['username'], password=request.data['password'],
-                realm="Username-Password-Authentication")
+                     client_assertion_signing_key=settings.PUBLICKEY, client_assertion_signing_alg="RS256")
+    print(token.client_credentials())
+    # token.login(username=request.data['username'], password=request.data['password'],
+    #             realm="Username-Password-Authentication")
     # print(token.get())
     # credentials = token.client_credentials(settings.AUTH0_API_IDENTIFIER)
     # print(credentials)

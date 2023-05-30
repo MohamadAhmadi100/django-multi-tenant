@@ -9,6 +9,8 @@ from cryptography.x509 import load_pem_x509_certificate
 from dotenv import load_dotenv
 from six.moves.urllib import request
 from cryptography.hazmat.primitives import serialization
+from pyasn1_modules import pem, rfc2459
+from pyasn1.codec.der import decoder
 
 load_dotenv()
 # auth0
@@ -144,14 +146,23 @@ IMPORT_STRINGS = (
     'JWT_RESPONSE_PAYLOAD_HANDLER',
     'JWT_GET_USER_SECRET_KEY',
 )
-jsonurl = request.urlopen(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
-jwks = json.loads(jsonurl.read())
-t = textwrap.fill(jwks['keys'][0]['x5c'][0])
-CERT = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
-with open("certificate/cert.pem", 'wb+') as f:
-    print(serialization.load_pem_private_key(f.read(), password=None))
-CERTIFICATE = load_pem_x509_certificate(str.encode(CERT), default_backend())
-PUBLICKEY = CERTIFICATE.public_key()
+# jsonurl = request.urlopen(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
+# jwks = json.loads(jsonurl.read())
+# t = textwrap.fill(jwks['keys'][0]['x5c'][0])
+# CERT = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
+with open("certificate/cert.pem", 'rb') as f:
+    certificate = f.read()
+# cert = serialization.load_pem_certificate(certificate, default_backend())
+cert = load_pem_x509_certificate(certificate, default_backend())
+public_key = cert.public_key()
+public_key_pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+)
+
+PUBLICKEY = public_key_pem.decode()
+# CERTIFICATE = load_pem_x509_certificate(str.encode(CERT), default_backend())
+# PUBLICKEY = CERTIFICATE.public_key()
 JWT_AUTH = {
     # 'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
     'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
