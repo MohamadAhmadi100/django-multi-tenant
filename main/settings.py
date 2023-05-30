@@ -11,7 +11,7 @@ from six.moves.urllib import request
 from cryptography.hazmat.primitives import serialization
 
 load_dotenv()
-
+# auth0
 AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_CLIENT_ID = os.getenv("AUTH0_CLIENT_ID")
 AUTH0_CLIENT_SECRET = os.getenv("AUTH0_CLIENT_SECRET")
@@ -20,6 +20,7 @@ AUTH0_MANAGEMENT_API_CLIENT_ID = os.getenv("AUTH0_MANAGEMENT_API_CLIENT_ID")
 AUTH0_MANAGEMENT_API_CLIENT_SECRET = os.getenv("AUTH0_MANAGEMENT_API_CLIENT_SECRET")
 AUTH0_CALLBACK_URL = os.getenv("AUTH0_CALLBACK_URL")
 
+# database
 DATABASE_NAME = os.getenv('DATABASE_NAME'),
 DATABASE_USER = os.getenv('DATABASE_USER'),
 DATABASE_PASSWORD = os.getenv('DATABASE_PASSWORD'),
