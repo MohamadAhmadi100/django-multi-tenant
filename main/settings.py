@@ -7,6 +7,8 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from dotenv import load_dotenv
 from six.moves.urllib import request
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 load_dotenv()
 # auth0
@@ -108,7 +110,7 @@ DATABASES = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    'your_app.auth_backends.Auth0Backend',
+    'tenant.auth_backends.Auth0Backend',
 
 ]
 SIMPLE_JWT = {
@@ -189,3 +191,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+# sentry
+
+sentry_sdk.init(
+    dsn="https://efa604a455114b499ed8bea6c322eb70@o4505311396102144.ingest.sentry.io/4505311403376640",
+    integrations=[
+        DjangoIntegration(),
+    ],
+    traces_sample_rate=1.0,
+    send_default_pii=True
+)

@@ -6,4 +6,6 @@ urlpatterns = [
 
     path('api/register/', api_views.UserRegistrationView.as_view(), name='register'),
     path('api/login/', api_views.login, name='login'),
+    path('sentry-debug/', api_views.trigger_error),
+
 ]

@@ -11,7 +11,13 @@ from django.conf import settings
 from auth0.authentication import GetToken
 
 
+def trigger_error(request):
+    division_by_zero = 1 / 0
+
+
+@api_view(['POST'])
 def login(request):
+    trigger_error(request)
     if request.method == 'POST':
         data = json.loads(request.body)
         username = data.get('username')
@@ -50,6 +56,7 @@ class CustomPermission(BasePermission):
 
 class UserRegistrationView(APIView):
     def post(self, request):
+        trigger_error(request)
         data = {
             'email': request.data.get('email'),
             'password': request.data.get('password'),
@@ -65,4 +72,4 @@ class UserRegistrationView(APIView):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated, CustomPermission])
 def protected_view(request):
-    return Response({'message': 'This is a protected view.'})
+    return Response({'message': 'token Bearer'})
