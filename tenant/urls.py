@@ -3,10 +3,7 @@ from django.urls import path
 from . import api_views
 
 urlpatterns = [
-    # path('', api_views.AccountCreate.as_view(), name=api_views.AccountCreate.name),
-    # path('users/', api_views.UserList.as_view(), name=api_views.UserList.name),
-    # path('users/<uuid:pk>', api_views.UserDetail.as_view(), name=api_views.UserDetail.name),
-    # path('tenant/', api_views.TenantDetail.as_view(), name=api_views.TenantDetail.name),
-    # path('test/scope', api_views.test_scoped)
-    path('api/private-scoped', api_views.login)
+
+    path('api/register/', api_views.UserRegistrationView.as_view(), name='register'),
+    path('api/login/', api_views.login, name='login'),
 ]

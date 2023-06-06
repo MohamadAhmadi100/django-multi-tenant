@@ -2,15 +2,11 @@ import json
 import os
 import textwrap
 from pathlib import Path
-from cryptography.hazmat.primitives.asymmetric import rsa
-import cryptography.x509
+
 from cryptography.hazmat.backends import default_backend
 from cryptography.x509 import load_pem_x509_certificate
 from dotenv import load_dotenv
 from six.moves.urllib import request
-from cryptography.hazmat.primitives import serialization
-from pyasn1_modules import pem, rfc2459
-from pyasn1.codec.der import decoder
 
 load_dotenv()
 # auth0
@@ -50,8 +46,8 @@ INSTALLED_APPS = [
     "djoser",
     "corsheaders",
     'drf_yasg',
-    # 'rest_framework_auth0',
-    # 'rest_framework_jwt',
+    'rest_framework_simplejwt',
+
     # apps
     'tenant.apps.TenantConfig',
 ]
@@ -112,30 +108,22 @@ DATABASES = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    'django.contrib.auth.backends.ModelBackend',
-    'django.contrib.auth.backends.RemoteUserBackend',
-]
+    'your_app.auth_backends.Auth0Backend',
 
+]
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        # 'rest_framework_jwt.authentication.JSONWebTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
         'rest_framework.authentication.BasicAuthentication',
     ),
-    # 'DEFAULT_FILTER_BACKENDS': (
-    #     'django_filters.rest_framework.DjangoFilterBackend',
-    # ),
-    # 'DEFAULT_RENDERER_CLASSES': (
-    #     'rest_framework.renderers.JSONRenderer',
-    # ),
-    # 'DEFAULT_PARSER_CLASSES': (
-    #     'rest_framework.parsers.JSONParser',
-    # ),
-    # 'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema'
+
 }
 IMPORT_STRINGS = (
     'JWT_ENCODE_HANDLER',
@@ -146,48 +134,31 @@ IMPORT_STRINGS = (
     'JWT_RESPONSE_PAYLOAD_HANDLER',
     'JWT_GET_USER_SECRET_KEY',
 )
-# jsonurl = request.urlopen(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
-# jwks = json.loads(jsonurl.read())
-# t = textwrap.fill(jwks['keys'][0]['x5c'][0])
-# CERT = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
-with open("certificate/cert.pem", 'rb') as f:
-    certificate = f.read()
-# cert = serialization.load_pem_certificate(certificate, default_backend())
-cert = load_pem_x509_certificate(certificate, default_backend())
-public_key = cert.public_key()
-public_key_pem = public_key.public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo
-)
 
-PUBLICKEY = public_key_pem.decode()
-# CERTIFICATE = load_pem_x509_certificate(str.encode(CERT), default_backend())
-# PUBLICKEY = CERTIFICATE.public_key()
+jsonurl = request.urlopen(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
+jwks = json.loads(jsonurl.read())
+t = textwrap.fill(jwks['keys'][0]['x5c'][0])
+CERT = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
+CERTIFICATE = load_pem_x509_certificate(str.encode(CERT), default_backend())
+PUBLICKEY = CERTIFICATE.public_key()
+
+AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
+API_IDENTIFIER = os.environ.get('AUTH0_API_IDENTIFIER')
+PUBLIC_KEY = None
+JWT_ISSUER = None
+
+if AUTH0_DOMAIN:
+    JWT_ISSUER = 'https://' + AUTH0_DOMAIN + '/'
+
 JWT_AUTH = {
-    # 'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
-    'JWT_PAYLOAD_GET_USERNAME_HANDLER': 'tenant.utils.get_username',
-    'JWT_PAYLOAD_HANDLER': 'tenant.utils.jwt_payload_handler',
-    'JWT_DECODE_HANDLER': 'tenant.utils.jwt_get_username_from_payload_handler',
-    'JWT_PUBLIC_KEY': PUBLICKEY,
+    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
+        'auth0authorization.utils.jwt_get_username_from_payload_handler',
+    'JWT_DECODE_HANDLER':
+        'auth0authorization.utils.jwt_decode_token',
     'JWT_ALGORITHM': 'RS256',
-    'JWT_AUDIENCE': AUTH0_API_IDENTIFIER,
-    'JWT_ISSUER': AUTH0_DOMAIN + '/',
+    'JWT_AUDIENCE': API_IDENTIFIER,
+    'JWT_ISSUER': JWT_ISSUER,
     'JWT_AUTH_HEADER_PREFIX': 'Bearer',
-}
-AUTH0 = {
-    'CLIENTS': {
-        'default': {
-            'AUTH0_CLIENT_ID': AUTH0_CLIENT_ID,
-            'AUTH0_AUDIENCE': AUTH0_API_IDENTIFIER,
-            'AUTH0_ALGORITHM': 'RS256',
-            'PUBLIC_KEY': PUBLICKEY,
-        }
-    },
-    'MANAGEMENT_API': {
-        'AUTH0_DOMAIN': AUTH0_DOMAIN,
-        'AUTH0_CLIENT_ID': AUTH0_MANAGEMENT_API_CLIENT_ID,
-        'AUTH0_CLIENT_SECRET': AUTH0_MANAGEMENT_API_CLIENT_SECRET
-    }
 }
 
 AUTH_PASSWORD_VALIDATORS = [

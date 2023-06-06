@@ -6,29 +6,17 @@ from .models import Tenant
 User = get_user_model()
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = (
-            'url',
-            'id',
-            'username',
-            'password',
-        )
-        extra_kwargs = {
-            'password': {'write_only': True},
-        }
+        fields = ['username', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        return User.objects.create_user(**validated_data)
-
-    def update(self, instance, validated_data):
-        updated = super().update(instance, validated_data)
-
-        if 'password' in validated_data:
-            updated.set_password(validated_data['password'])
-            updated.save()
-        return updated
+        user = User(username=validated_data['username'])
+        user.set_password(validated_data['password'])
+        user.save()
+        return user
 
 
 class TenantSerializer(serializers.HyperlinkedModelSerializer):
