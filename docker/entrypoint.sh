@@ -14,6 +14,7 @@
 python manage.py collectstatic --noinput
 python manage.py migrate
 
+
 #gunicorn main.wsgi:application --user www-data --bind 0.0.0.0:8010 --workers 3
 #nginx -g "daemon off;"
 
