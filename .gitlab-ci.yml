@@ -9,11 +9,11 @@ variables:
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
 
 stages:
+  - test
   - build
-  - release
 
 sonarcloud-check:
-  stage: build
+  stage: test
   image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
@@ -36,25 +36,23 @@ build_core_test:
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
-    - docker build -f docker/Dockerfile -t core-test-django:latest .
-  artifacts:
-    expire_in: 1 hour
-    paths:
-      - core-test-django/
-
-release_develop_core_test:
-  stage: release
-  image: docker:20
-  cache: []
-  services:
-    - name: docker:20-dind
-      alias: docker
-  variables:
-    DOCKER_DRIVER: overlay2
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-  script:
-    - docker tag core-test-django:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-    - docker tag core-test-django:latest $CI_REGISTRY_IMAGE:latest
+    - docker build -f docker/Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG -t $CI_REGISTRY_IMAGE:latest .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
     - docker push $CI_REGISTRY_IMAGE:latest
+
+#release_develop_core_test:
+#  stage: release
+#  image: docker:20
+#  cache: []
+#  services:
+#    - name: docker:20-dind
+#      alias: docker
+#  variables:
+#    DOCKER_DRIVER: overlay2
+#  before_script:
+#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#  script:
+#    - docker tag core-test-django:latest $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+#    - docker tag core-test-django:latest $CI_REGISTRY_IMAGE:latest
+#    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+#    - docker push $CI_REGISTRY_IMAGE:latest
