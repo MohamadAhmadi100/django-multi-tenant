@@ -6,6 +6,12 @@ from .models import Tenant
 User = get_user_model()
 
 
+class TenantSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tenant
+        fields = ['name', 'auth0_tenant_id']
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

@@ -1,14 +1,15 @@
-import requests
-from rest_framework.views import APIView
-from rest_framework.permissions import BasePermission
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-
-from django.http import JsonResponse
 import json
-from django.conf import settings
+
 from auth0.authentication import GetToken
+from django.conf import settings
+from django.http import JsonResponse
+from rest_framework import status, permissions
+from rest_framework.decorators import api_view
+from rest_framework.permissions import BasePermission
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .serializers import TenantSerializer
 
 
 def trigger_error(request):
@@ -54,22 +55,12 @@ class CustomPermission(BasePermission):
         return 'admin' in request.user.role
 
 
-class UserRegistrationView(APIView):
-    def post(self, request):
-        trigger_error(request)
-        data = {
-            'email': request.data.get('email'),
-            'password': request.data.get('password'),
-        }
-        response = requests.post(
-            f'https://{settings.AUTH0_DOMAIN}/api/v2/users',
-            headers={'Authorization': f'Bearer {settings.AUTH0_CLIENT_SECRET}'},
-            json=data
-        )
-        return Response(response.json(), status=response.status_code)
+class TenantData(APIView):
+    permission_classes = [permissions.IsAuthenticated]
 
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated, CustomPermission])
-def protected_view(request):
-    return Response({'message': 'token Bearer'})
+    def get(self, request):
+        if hasattr(request, 'tenant') and request.tenant:
+            serializer = TenantSerializer(request.tenant)
+            return Response(serializer.data)
+        else:
+            return Response({'error': 'Tenant not found'}, status=status.HTTP_404_NOT_FOUND)

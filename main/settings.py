@@ -1,16 +1,13 @@
-import json
-import os
-import textwrap
 from pathlib import Path
-from cryptography.hazmat.backends import default_backend
-from cryptography.x509 import load_pem_x509_certificate
-from six.moves.urllib import request
+import os
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
-from .config import Config
+
+# from .config import SECRET_KEY
+from .config import setting
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+SECRET_KEY = setting.SECRET_KEY
 
 DEBUG = True
 
@@ -47,6 +44,7 @@ MIDDLEWARE = [
 
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    # 'tenant.middleware.TenantMiddleware',
 ]
 
 SWAGGER_SETTINGS = {
@@ -79,15 +77,20 @@ TEMPLATES = [
 AUTH_USER_MODEL = 'tenant.User'
 
 WSGI_APPLICATION = 'main.wsgi.application'
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'main_test',
-        'USER': 'maintest',
-        'PASSWORD': 'adminadmin',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'NAME': setting.DATABASE_NAME,
+        'USER': setting.DATABASE_USER,
+        'PASSWORD': setting.DATABASE_PASSWORD,
+        'HOST': setting.DATABASE_HOST,
+        'PORT': setting.DATABASE_PORT,
+        'OPTIONS': {
+            'sslmode': 'require',
+            'sslrootcert': os.path.join(BASE_DIR, 'certificate/server-ca.pem'),
+            'sslcert': os.path.join(BASE_DIR, 'certificate/client-cert.pem'),
+            'sslkey': os.path.join(BASE_DIR, 'certificate/client-key.pem'),
+        },
     }
 }
 
@@ -103,10 +106,15 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',
+        'tenant.auth0authentication.Auth0JSONWebTokenAuthentication',
     ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser',
+    ),
+    # 'EXCEPTION_HANDLER': 'tenant.exception_handler.custom_exception_handler',
 
 }
 IMPORT_STRINGS = (
@@ -118,32 +126,6 @@ IMPORT_STRINGS = (
     'JWT_RESPONSE_PAYLOAD_HANDLER',
     'JWT_GET_USER_SECRET_KEY',
 )
-
-jsonurl = request.urlopen(f"https://{'AUTH0_DOMAIN'}/.well-known/jwks.json")
-jwks = json.loads(jsonurl.read())
-t = textwrap.fill(jwks['keys'][0]['x5c'][0])
-CERT = '-----BEGIN CERTIFICATE-----\n' + textwrap.fill(jwks['keys'][0]['x5c'][0], 64) + '\n-----END CERTIFICATE-----'
-CERTIFICATE = load_pem_x509_certificate(str.encode(CERT), default_backend())
-PUBLICKEY = CERTIFICATE.public_key()
-
-AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN')
-API_IDENTIFIER = os.environ.get('AUTH0_API_IDENTIFIER')
-PUBLIC_KEY = None
-JWT_ISSUER = None
-
-if AUTH0_DOMAIN:
-    JWT_ISSUER = 'https://' + AUTH0_DOMAIN + '/'
-
-JWT_AUTH = {
-    'JWT_PAYLOAD_GET_USERNAME_HANDLER':
-        'auth0authorization.utils.jwt_get_username_from_payload_handler',
-    'JWT_DECODE_HANDLER':
-        'auth0authorization.utils.jwt_decode_token',
-    'JWT_ALGORITHM': 'RS256',
-    'JWT_AUDIENCE': API_IDENTIFIER,
-    'JWT_ISSUER': JWT_ISSUER,
-    'JWT_AUTH_HEADER_PREFIX': 'Bearer',
-}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -177,7 +159,7 @@ CORS_ORIGIN_ALLOW_ALL = True
 # sentry
 
 sentry_sdk.init(
-    dsn="https://efa604a455114b499ed8bea6c322eb70@o4505311396102144.ingest.sentry.io/4505311403376640",
+    dsn="https://6b3f68e636eb4e6e9f273ba5cae5b918@o4505277558095872.ingest.sentry.io/4505334489874432",
     integrations=[
         DjangoIntegration(),
     ],
