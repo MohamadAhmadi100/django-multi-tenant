@@ -6,6 +6,7 @@ from sentry_sdk.integrations.django import DjangoIntegration
 # from .config import SECRET_KEY
 from .config import setting
 
+setting.get_new_settings()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = setting.SECRET_KEY
 
@@ -157,9 +158,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ORIGIN_ALLOW_ALL = True
 
 # sentry
-
 sentry_sdk.init(
-    dsn="https://6b3f68e636eb4e6e9f273ba5cae5b918@o4505277558095872.ingest.sentry.io/4505334489874432",
+    dsn=setting.SENTRY_DSN,
     integrations=[
         DjangoIntegration(),
     ],

@@ -8,7 +8,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import BasePermission
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
+from main.config import setting
 from .serializers import TenantSerializer
 
 
@@ -64,3 +64,25 @@ class TenantData(APIView):
             return Response(serializer.data)
         else:
             return Response({'error': 'Tenant not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ConfigView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        try:
+            configs = setting.get_cached_configs()
+            return Response({"message": configs}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+class RefreshConsulConfigView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        try:
+            setting.get_new_settings()
+            return Response({'message': 'OK'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
