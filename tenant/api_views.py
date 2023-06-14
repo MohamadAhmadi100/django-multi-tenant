@@ -16,38 +16,15 @@ def trigger_error(request):
     division_by_zero = 1 / 0
 
 
-@api_view(['POST'])
-def login(request):
-    trigger_error(request)
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
+class OrganizationDataView(APIView):
+    permission_classes = [permissions.IsAdminUser]
 
-        try:
-            auth0_domain = settings.AUTH0_DOMAIN
-            auth0_client_id = settings.AUTH0_CLIENT_ID
-            auth0_client_secret = settings.AUTH0_CLIENT_SECRET
+    def get(self, request):
+        organization_id = request.user.organization_id
+        user_id = request.user.user_id
+        data = {"organization_id": organization_id, "user_id": user_id}
 
-            auth0 = GetToken(domain=auth0_domain, client_id=auth0_client_id)
-            token_info = auth0.login(
-                username,
-                password,
-                audience=f'https://{auth0_domain}/api/v2/',
-                scope='openid profile email',
-            )
-
-            access_token = token_info['access_token']
-            id_token = token_info['id_token']
-            expires_in = token_info['expires_in']
-
-            return JsonResponse({
-                'access_token': access_token,
-                'id_token': id_token,
-                'expires_in': expires_in
-            })
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+        return Response(data)
 
 
 class CustomPermission(BasePermission):
