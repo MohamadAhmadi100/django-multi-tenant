@@ -85,13 +85,9 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed('Could not decode token')
         subject_claim = payload.get('sub')
+        print(payload)
+        print(subject_claim)
         request.organization_id = payload.get("org_id")
         request.user_id = subject_claim.split('|')[1]
         user = MainUser(organization_id=request.organization_id, user_id=request.user_id)
         return user, None
-# tenant_id = payload.get("https://your-namespace/tenant_id")
-#         tenant = Tenant.objects.get(auth0_tenant_id=tenant_id)
-#         return (tenant, None)
-#
-#     except (Tenant.DoesNotExist, jose.jwt.JWTError):
-#     raise AuthenticationFailed('No tenant found or Invalid token')

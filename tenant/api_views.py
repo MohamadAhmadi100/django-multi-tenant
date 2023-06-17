@@ -1,5 +1,6 @@
 import json
-
+import jwt
+import requests
 from auth0.authentication import GetToken
 from django.conf import settings
 from django.http import JsonResponse
@@ -10,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from main.config import setting
 from .serializers import TenantSerializer
+from .auth0manager import Auth0
 
 
 def trigger_error(request):
@@ -32,15 +34,36 @@ class CustomPermission(BasePermission):
         return 'admin' in request.user.role
 
 
-class TenantData(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
+class ListUsersView(APIView):
     def get(self, request):
-        if hasattr(request, 'tenant') and request.tenant:
-            serializer = TenantSerializer(request.tenant)
-            return Response(serializer.data)
+        id_token = request.headers.get('Authorization').split(' ')[1]
+        decoded_token = jwt.decode(id_token, options={"verify_signature": False})
+        # roles = decoded_token.get()  # NAMESPACE + 'roles', [])
+        # print(decoded_token)
+
+        if 'Manager' in "Manager":
+            management_access_token = Auth0().get_management_api_token()
+            setting.get_cached_configs()
+            response = requests.get(f'https://dev-d6tfpiyvod1zdqiv.us.auth0.com/api/v2/users',
+                                    headers={'Authorization': f'Bearer {management_access_token}'})
+            return Response(response.json())
         else:
-            return Response({'error': 'Tenant not found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+
+
+# class RetrieveUserView(APIView):
+#     def get(self, request, user_id):
+#         id_token = request.headers.get('Authorization').split(' ')[1]
+#         decoded_token = jwt.decode(id_token, options={"verify_signature": False})
+#         roles = decoded_token.get(NAMESPACE + 'roles', [])
+#
+#         if 'Manager' in roles:
+#             access_token = get_management_api_token()
+#             response = requests.get(f'https://{AUTH0_DOMAIN}/api/v2/users/{user_id}',
+#                                     headers={'Authorization': f'Bearer {access_token}'})
+#             return Response(response.json())
+#         else:
+#             return Response({'error': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
 
 
 class ConfigView(APIView):

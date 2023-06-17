@@ -107,4 +107,4 @@ class Setting:
 setting = Setting()
 if __name__ == '__main__':
     setting.get_new_settings()
-    # setting.get_cache()
+    # setting.get_cached_configs()
