@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 import base64
 from django.core.cache import cache
+from collections import defaultdict
 
 load_dotenv()
 
@@ -34,6 +35,7 @@ class Setting:
         self.DATABASE_PORT = None
         # sentry
         self.SENTRY_DSN = None
+        self.MIGRATION_APPS_LIST = ["tenant"]
 
     def request_consul(self):
         consul_client = consul.Consul(
@@ -45,7 +47,7 @@ class Setting:
         index, data = consul_client.kv.get(key="", recurse=True)
         return index, data
 
-    def convert_to_dict(self, index, data):
+    def convert_binary_to_dict(self, index, data):
         for item in data:
             key = item['Key']
             value = item['Value']
@@ -71,16 +73,16 @@ class Setting:
         self.AUTH0_LOGIN_URL = self.variables.get("Spov/Authentication/LOGIN_URL", None)
         self.AUTH0_LOGOUT_URL = self.variables.get("Spov/Authentication/LOGOUT_URL", None)
         # database
-        self.DATABASE_NAME = self.variables.get("Spov/Database/NAME", None)
-        self.DATABASE_USER = self.variables.get("Spov/Database/USERNAME", None)
-        self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)
-        self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)
+        self.DATABASE_NAME = self.variables.get("Spov/Database/NAME", None)  # "spovdevelop"
+        self.DATABASE_USER = self.variables.get("Spov/Database/USERNAME", None)  # 'develop'
+        self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)  # 'admin'
+        self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)  # '127.0.0.1'
         self.DATABASE_PORT = self.variables.get("Spov/Database/PORT", 5432)
         self.SENTRY_DSN = self.variables.get("Spov/Sentry/API_DSN", None)
 
     def refresh_variables(self):
         index, data = self.request_consul()
-        return self.convert_to_dict(index, data)
+        return self.convert_binary_to_dict(index, data)
 
     def get_new_settings(self):
         self.refresh_variables()
@@ -102,6 +104,29 @@ class Setting:
                 continue
             api_output[k] = v
         return api_output
+
+    def convert_to_dict(self, d):
+        """Recursively convert defaultdict to dict."""
+        if isinstance(d, defaultdict):
+            d = {k: self.convert_to_dict(v) for k, v in d.items()}
+        return d
+
+    def get_client_response(self):
+        variables = self.get_cached_configs()
+        api_output = defaultdict(lambda: defaultdict(dict))
+        for key, value in variables.items():
+            if not value:
+                continue
+
+            split_key = key.split('/')
+            if len(split_key) < 3:
+                continue
+
+            first_level_key, second_level_key, third_level_key = split_key
+            api_output[first_level_key][second_level_key][third_level_key] = value
+
+        # Convert defaultdict back to regular dict for cleaner output
+        return self.convert_to_dict(api_output)
 
 
 setting = Setting()

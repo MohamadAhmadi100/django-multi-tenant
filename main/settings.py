@@ -3,16 +3,14 @@ import os
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-# from .config import SECRET_KEY
 from .config import setting
 
-setting.get_new_settings()
+setting.get_cached_configs()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = setting.SECRET_KEY
+DEBUG = setting.DEBUG
 
-DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -29,7 +27,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'consul',
-
     # apps
     'tenant.apps.TenantConfig',
 ]
@@ -75,7 +72,7 @@ TEMPLATES = [
     },
 ]
 
-AUTH_USER_MODEL = 'tenant.User'
+# AUTH_USER_MODEL = 'tenant.User'
 
 WSGI_APPLICATION = 'main.wsgi.application'
 DATABASES = {
@@ -94,10 +91,10 @@ DATABASES = {
         },
     }
 }
+DATABASE_ROUTERS = ['tenant.router.OrganizationDatabaseRouter']
 
 AUTHENTICATION_BACKENDS = [
     'tenant.auth_backends.Auth0Backend',
-
 ]
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),

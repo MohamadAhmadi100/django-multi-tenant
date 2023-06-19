@@ -2,8 +2,7 @@ from rest_framework import permissions
 from rest_framework_auth0.permissions import (
     HasGroupBasePermission,
     HasRoleBasePermission,
-    HasPermissionBasePermission,
-    HasAdminRole
+    HasPermissionBasePermission
 )
 
 

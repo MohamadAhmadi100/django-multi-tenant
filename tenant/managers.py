@@ -1,19 +1,19 @@
-from django.contrib.auth.models import BaseUserManager
+from django.db.models import Manager
 
 
-class MainUserManager(BaseUserManager):
-    def create_user(self, email, username, password):
-        if not email:
-            raise ValueError("please insert email")
-        if not username:
-            raise ValueError('please insert username')
-        user = self.model(email=self.normalize_email(email), username=username)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
+class MainUserManager(Manager):
 
-    def create_superuser(self, email, username, password):
-        user = self.create_user(email, username, password)
-        user.is_admin = True
+    def find_or_create(self, user_id, organization_id):
+        if not organization_id:
+            raise ValueError("organization not detected")
+        if not user_id:
+            raise ValueError('userID not detected')
+
+    def create_user(self, user_id, organization_id):
+        if not organization_id:
+            raise ValueError("organization not detected")
+        if not user_id:
+            raise ValueError('userID not detected')
+        user = self.model(user_id=user_id, organization_id=organization_id)
         user.save(using=self._db)
         return user
