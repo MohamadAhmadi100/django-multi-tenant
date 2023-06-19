@@ -1,4 +1,4 @@
-# My Django Project
+# Core Test
 
 This Django project is a multi-tenancy application that allows managing different organizations and users within those
 organizations. It is integrated with PostgreSQL for data persistence and uses Django Rest Framework (DRF) for creating
