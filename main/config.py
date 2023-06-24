@@ -1,12 +1,17 @@
 import base64
 import os
+from pathlib import Path
+
 from collections import defaultdict
 
 import consul
 from django.core.cache import cache
 from dotenv import load_dotenv
+import tempfile
 
 load_dotenv()
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Setting:
@@ -34,9 +39,25 @@ class Setting:
         self.DATABASE_PASSWORD = None
         self.DATABASE_HOST = None
         self.DATABASE_PORT = None
+        self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
+        self.DATABASE_CLIENT_CERT_PATH = None
+        self.DATABASE_CLIENT_KEY = self.variables.get("Spov/Database/CLIENT_KEY", None)
+        self.DATABASE_CLIENT_KEY_PATH = None
+        self.DATABASE_SERVER_CA = self.variables.get("Spov/Database/SERVER_CA", None)
+        self.DATABASE_SERVER_CA_PATH = None
         # sentry
         self.SENTRY_DSN = None
         self.MIGRATION_APPS_LIST = ["tenant"]
+
+    def create_certificate_files(self):
+        with open(self.DATABASE_SERVER_CA_PATH, "wb") as ca_cert_file:
+            ca_cert_file.write(base64.b64decode(self.DATABASE_SERVER_CA))
+
+        with open(self.DATABASE_CLIENT_CERT_PATH, "wb") as client_cert_file:
+            client_cert_file.write(base64.b64decode(self.DATABASE_CLIENT_CERT))
+
+        with open(self.DATABASE_CLIENT_KEY_PATH, "wb") as client_key_file:
+            client_key_file.write(base64.b64decode(self.DATABASE_CLIENT_KEY))
 
     def request_consul(self):
         consul_client = consul.Consul(
@@ -79,6 +100,13 @@ class Setting:
         self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)  # 'admin'  #
         self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)  # '127.0.0.1'  #
         self.DATABASE_PORT = self.variables.get("Spov/Database/PORT", 5432)
+        self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
+        self.DATABASE_CLIENT_CERT_PATH = os.path.join(BASE_DIR, 'certificate/client-cert.pem')
+        self.DATABASE_CLIENT_KEY = self.variables.get("Spov/Database/CLIENT_KEY", None)
+        self.DATABASE_CLIENT_KEY_PATH = os.path.join(BASE_DIR, 'certificate/client-key.pem')
+        self.DATABASE_SERVER_CA = self.variables.get("Spov/Database/SERVER_CA", None)
+        self.DATABASE_SERVER_CA_PATH = os.path.join(BASE_DIR, "certificate/server-ca.pem")
+
         self.SENTRY_DSN = self.variables.get("Spov/Sentry/API_DSN", None)
 
     def refresh_variables(self):
