@@ -35,10 +35,14 @@ build_core_test:
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
+    - export CONSUL_HOST=$CONSUL_TOKEN
+    - export CONSUL_TOKEN=$CONSUL_TOKEN
+    - export SECRET_KEY=$SECRET_KEY
+    - export CONSUL_PORT=443
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     # - docker build -f docker/Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG -t $CI_REGISTRY_IMAGE:latest .
-    - chmod +x ./set_envirment.sh; ./set_envirment.sh
+#    - chmod +x ./set_envirment.sh; ./set_envirment.sh
     - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG -t $CI_REGISTRY_IMAGE:latest .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
     - docker push $CI_REGISTRY_IMAGE:latest
