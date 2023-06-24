@@ -1,6 +1,6 @@
 workflow:
   rules:
-    - if: $CI_COMMIT_BRANCH != "cicd" && $CI_PIPELINE_SOURCE != "merge_request_event"
+    - if: $CI_COMMIT_BRANCH != "develop" && $CI_PIPELINE_SOURCE != "merge_request_event"
       when: never
     - when: always
 
@@ -56,3 +56,21 @@ build_core_test:
 #    - docker tag core-test-django:latest $CI_REGISTRY_IMAGE:latest
 #    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
 #    - docker push $CI_REGISTRY_IMAGE:latest
+
+deploy_develop:
+  stage: deploy
+  image: alpine/curl
+  cache: []
+  script:
+    - curl -X POST -F token=${SPOV_TRIGGER_DEPLOYMENT_TOKEN} -F ref=develop ${SPOV_TRIGGER_DEPLOYMENT_URL}
+  only:
+    - develop
+
+deploy_latest:
+  stage: deploy
+  image: alpine/curl
+  cache: []
+  script:
+    - curl -X POST -F token=${SPOV_TRIGGER_DEPLOYMENT_TOKEN} -F ref=develop ${SPOV_TRIGGER_DEPLOYMENT_URL}
+  only:
+    - tags
