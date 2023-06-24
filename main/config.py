@@ -51,13 +51,13 @@ class Setting:
 
     def create_certificate_files(self):
         with open(self.DATABASE_SERVER_CA_PATH, "wb") as ca_cert_file:
-            ca_cert_file.write(base64.b64decode(self.DATABASE_SERVER_CA))
+            ca_cert_file.write(self.DATABASE_SERVER_CA.encode("UTF-8"))
 
         with open(self.DATABASE_CLIENT_CERT_PATH, "wb") as client_cert_file:
-            client_cert_file.write(base64.b64decode(self.DATABASE_CLIENT_CERT))
+            client_cert_file.write(self.DATABASE_CLIENT_CERT.encode("UTF-8"))
 
         with open(self.DATABASE_CLIENT_KEY_PATH, "wb") as client_key_file:
-            client_key_file.write(base64.b64decode(self.DATABASE_CLIENT_KEY))
+            client_key_file.write(self.DATABASE_CLIENT_KEY.encode("UTF-8"))
 
     def request_consul(self):
         consul_client = consul.Consul(
@@ -116,6 +116,7 @@ class Setting:
     def get_new_settings(self):
         self.refresh_variables()
         self.set_values()
+        self.create_certificate_files()
         self.set_cache()
 
     def set_cache(self):

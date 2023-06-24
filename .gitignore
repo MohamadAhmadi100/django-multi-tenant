@@ -42,7 +42,9 @@ MANIFEST
 *.pem
 pip-log.txt
 pip-delete-this-directory.txt
-certificate/
+certificate/client-cert.pem
+certificate/client-key.pem
+certificate/server-ca.pem
 htmlcov/
 .tox/
 .nox/
