@@ -7,6 +7,7 @@ workflow:
 variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
   GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  ENV_FILE: .env
 
 stages:
   - test
@@ -35,10 +36,16 @@ build_core_test:
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
-    - export CONSUL_HOST=$CONSUL_TOKEN
-    - export CONSUL_TOKEN=$CONSUL_TOKEN
-    - export SECRET_KEY=$SECRET_KEY
-    - export CONSUL_PORT=443
+    - echo "Writing GitLab variables to $ENV_FILE"
+    - |
+      rm -f $ENV_FILE
+      touch $ENV_FILE
+      echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
+      echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
+      echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
+      echo CONSUL_PORT=443 >> $ENV_FILE
+    - echo "GitLab variables written to $ENV_FILE"
+
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     # - docker build -f docker/Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG -t $CI_REGISTRY_IMAGE:latest .
