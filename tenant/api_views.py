@@ -1,3 +1,4 @@
+import requests
 from main.config import setting
 from rest_framework import permissions
 from rest_framework import status
@@ -81,3 +82,20 @@ class RefreshConsulConfigView(APIView):
             return Response({'message': 'OK'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+class GetUserDetailsFromAuth0(APIView):
+
+    def get(self, request):
+        access_token = request.headers.get('Authorization')
+        if not access_token:
+            return Response({"error": "Authorization header is required"}, status=status.HTTP_400_BAD_REQUEST)
+        auth0_domain = setting.AUTH0_JWKS_URL.split("/")[2]
+        auth0_userinfo_url = f'https://{auth0_domain}/userinfo'
+
+        response = requests.get(auth0_userinfo_url, headers={'Authorization': access_token})
+
+        if response.status_code == 200:
+            return Response(response.json(), status=status.HTTP_200_OK)
+        else:
+            return Response(response.json(), status=response.status_code)

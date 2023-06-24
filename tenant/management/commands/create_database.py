@@ -55,10 +55,8 @@ class OrganizationDatabaseManager:
             OrganizationDatabaseManager._handlers_set = True
 
     def __enter__(self, db_name=None):
-        print(setting.DATABASE_HOST)
-
         db_name = db_name if db_name else self.db_name
-        self.connection = self._connect(db_name)
+        self.connection = self.connect(db_name)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -83,7 +81,7 @@ class OrganizationDatabaseManager:
             self.connection.close()
             self.logger.info(f"closed Database connection")
 
-    def _connect(self, dbname):
+    def connect(self, dbname):
         try:
             dbname = dbname.lower()
             connection = psycopg2.connect(
@@ -148,7 +146,7 @@ class OrganizationDatabaseManager:
                 self.logger.warning(f"Database {organization_id} already exists.")
             else:
                 self.logger.error(f"Error creating database {organization_id}: {error}")
-        self._connect(organization_id)
+        self.connect(organization_id)
         for app in setting.MIGRATION_APPS_LIST:
             try:
                 call_command('migrate', app, database=organization_id)

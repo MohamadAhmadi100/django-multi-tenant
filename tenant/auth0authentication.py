@@ -59,8 +59,8 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed('Error parsing token header.')
 
-        public_key = self.get_public_key(header['kid'])
         try:
+            public_key = self.get_public_key(header['kid'])
             return jwt.decode(
                 token,
                 public_key,
@@ -109,10 +109,10 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
 
         # Retrieve or create organization and user instances
         organization, organization_created = Organization.objects.get_or_create(organization_id=organization_id)
-        if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
+        if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY or True:
             with OrganizationDatabaseManager() as manager:
-                manager.create_organization_database(organization_id=organization_id)
-                # manager.__enter__(organization_id)
+                # manager.create_organization_database(organization_id=organization_id)
+                manager.connect(organization_id)
         request.organization_id = payload.get("org_id")
         request.user_id = subject_claim.split('|')[1]
         user, user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
