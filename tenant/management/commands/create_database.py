@@ -3,7 +3,6 @@ import os
 from time import strftime, localtime
 
 import colorlog
-import psycopg2
 from django.conf import settings
 from django.core.management import call_command
 from django.db import connections

@@ -42,7 +42,6 @@ MIDDLEWARE = [
 
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'corsheaders.middleware.CorsMiddleware',
-    # 'tenant.middleware.TenantMiddleware',
 ]
 
 SWAGGER_SETTINGS = {
@@ -72,7 +71,6 @@ TEMPLATES = [
     },
 ]
 
-# AUTH_USER_MODEL = 'tenant.User'
 
 WSGI_APPLICATION = 'main.wsgi.application'
 DATABASES = {

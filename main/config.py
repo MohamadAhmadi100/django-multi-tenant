@@ -1,13 +1,11 @@
 import base64
 import os
-from pathlib import Path
-
 from collections import defaultdict
+from pathlib import Path
 
 import consul
 from django.core.cache import cache
 from dotenv import load_dotenv
-import tempfile
 
 load_dotenv()
 
@@ -98,10 +96,10 @@ class Setting:
         self.AUTH0_LOGIN_URL = self.variables.get("Spov/Authentication/LOGIN_URL", None)
         self.AUTH0_LOGOUT_URL = self.variables.get("Spov/Authentication/LOGOUT_URL", None)
         # database
-        self.DATABASE_NAME = self.variables.get("Spov/Database/NAME", None)  # "spovdevelop"  #
-        self.DATABASE_USER = self.variables.get("Spov/Database/USERNAME", None)  # 'develop'  #
-        self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)  # 'admin'  #
-        self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)  # '127.0.0.1'  #
+        self.DATABASE_NAME = self.variables.get("Spov/Database/NAME", None)
+        self.DATABASE_USER = self.variables.get("Spov/Database/USERNAME", None)
+        self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)
+        self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)
         self.DATABASE_PORT = self.variables.get("Spov/Database/PORT", 5432)
         self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
         self.DATABASE_CLIENT_CERT_PATH = os.path.join(BASE_DIR, 'certificate/client-cert.pem')
@@ -139,7 +137,6 @@ class Setting:
         return api_output
 
     def convert_to_dict(self, d):
-        """Recursively convert defaultdict to dict."""
         if isinstance(d, defaultdict):
             d = {k: self.convert_to_dict(v) for k, v in d.items()}
         return d
@@ -165,4 +162,3 @@ class Setting:
 setting = Setting()
 if __name__ == '__main__':
     setting.get_new_settings()
-    # setting.get_cached_configs()
