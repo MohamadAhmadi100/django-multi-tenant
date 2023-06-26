@@ -30,7 +30,6 @@ class MainUser(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=False)
 
-    # objects = MainUserManager()
     REQUIRED_FIELDS = ['user_id', 'organization_id']
 
     def __str__(self):
