@@ -23,6 +23,12 @@ sonarcloud-check:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
+  before_script:
+    - export DJANGO_SETTINGS_MODULE=main.settings
+    - coverage run --source=. -m pytest
+    - coverage xml -o coverage.xml
+    - coverage report
+#    - coverage html
   script:
     - sonar-scanner
 
