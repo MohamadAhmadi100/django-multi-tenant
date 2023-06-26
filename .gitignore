@@ -85,7 +85,8 @@ celerybeat.pid
 
 *.sage.py
 
-.env
+#MJ for test
+#.env
 .venv
 env/
 venv/
