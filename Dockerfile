@@ -72,5 +72,7 @@ COPY .env $APP_HOME/.env
 
 #RUN apt-get update && apt-get -y dist-upgrade
 #RUN apt-get install -y netcat
+
+RUN chmod +x /home/app/spov/entrypoint.sh
 # run entrypoint.sh
 ENTRYPOINT ["/home/app/spov/entrypoint.sh"]
