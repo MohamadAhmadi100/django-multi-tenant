@@ -109,10 +109,10 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
 
         # Retrieve or create organization and user instances
         organization, organization_created = Organization.objects.get_or_create(organization_id=organization_id)
-        if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY or True:
+        if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
             with OrganizationDatabaseManager() as manager:
-                # manager.create_organization_database(organization_id=organization_id)
-                manager.connect(organization_id)
+                manager.create_organization_database(organization_id=organization_id)
+                # manager.connect(organization_id)
         request.organization_id = payload.get("org_id")
         request.user_id = subject_claim.split('|')[1]
         user, user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)

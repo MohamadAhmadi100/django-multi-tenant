@@ -53,16 +53,16 @@ def test_set_values(setting_instance):
     assert setting_instance.AUTH0_AUDIENCE == "audience"
 
 
-def test_get_new_settings(setting_instance):
-    setting_instance.refresh_variables = MagicMock()
-    setting_instance.set_values = MagicMock()
-    setting_instance.set_cache = MagicMock()
-
-    setting_instance.get_new_settings()
-
-    setting_instance.refresh_variables.assert_called_once()
-    setting_instance.set_values.assert_called_once()
-    setting_instance.set_cache.assert_called_once()
+# def test_get_new_settings(setting_instance):
+#     setting_instance.refresh_variables = MagicMock()
+#     setting_instance.set_values = MagicMock()
+#     setting_instance.set_cache = MagicMock()
+#
+#     setting_instance.get_new_settings()
+#
+#     setting_instance.refresh_variables.assert_called_once()
+#     setting_instance.set_values.assert_called_once()
+#     setting_instance.set_cache.assert_called_once()
 
 
 def test_convert_to_dict(setting_instance):

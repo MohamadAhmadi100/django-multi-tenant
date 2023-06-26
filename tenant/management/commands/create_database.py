@@ -56,46 +56,16 @@ class OrganizationDatabaseManager:
 
     def __enter__(self, db_name=None):
         db_name = db_name if db_name else self.db_name
-        self.connection = self.connect(db_name)
+        self.connect(db_name)
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.logger.info(f"Database settings reset successfully.")
-        settings.DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': setting.DATABASE_NAME,
-                'USER': setting.DATABASE_USER,
-                'PASSWORD': setting.DATABASE_PASSWORD,
-                'HOST': setting.DATABASE_HOST,
-                'PORT': setting.DATABASE_PORT,
-            },
-            'OPTIONS': {
-                'sslmode': 'require',
-                'sslrootcert': os.path.join(settings.BASE_DIR, 'certificate/server-ca.pem'),
-                'sslcert': os.path.join(settings.BASE_DIR, 'certificate/client-cert.pem'),
-                'sslkey': os.path.join(settings.BASE_DIR, 'certificate/client-key.pem'),
-            },
-        }
         if self.connection:
-            self.connection.close()
-            self.logger.info(f"closed Database connection")
+            self.logger.info(f"Database connection pooling set")
 
     def connect(self, dbname):
         try:
             dbname = dbname.lower()
-            connection = psycopg2.connect(
-                dbname=dbname,
-                user=self.db_user,
-                password=self.db_password,
-                host=self.db_host,
-                sslmode='require',
-                sslrootcert=os.path.join(settings.BASE_DIR, 'certificate/server-ca.pem'),
-                sslcert=os.path.join(settings.BASE_DIR, 'certificate/client-cert.pem'),
-                sslkey=os.path.join(settings.BASE_DIR, 'certificate/client-key.pem'),
-
-            )
-            connection.autocommit = True
             settings.DATABASES[dbname] = {
                 'ENGINE': 'django.db.backends.postgresql',
                 'NAME': dbname,
@@ -111,7 +81,7 @@ class OrganizationDatabaseManager:
                     'RETRY_DELAY': 5
                 },
                 "ATOMIC_REQUESTS": True,
-                'CONN_MAX_AGE': 600,
+                'CONN_MAX_AGE': 1800,
                 'AUTOCOMMIT': True,
                 'OPTIONS': {
                     'sslmode': 'require',
@@ -119,9 +89,12 @@ class OrganizationDatabaseManager:
                     'sslcert': os.path.join(settings.BASE_DIR, 'certificate/client-cert.pem'),
                     'sslkey': os.path.join(settings.BASE_DIR, 'certificate/client-key.pem'),
                 },
+                "default": {
+                    "CONN_MAX_AGE": 1800
+                }
             }
             self.logger.info(f"Connected to database {dbname} successfully.")
-            return connection
+            # return connection
         except Exception as error:
             self.logger.error(f"Error connecting database {dbname}: {error}")
             return None

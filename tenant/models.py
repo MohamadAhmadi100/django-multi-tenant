@@ -1,7 +1,6 @@
 from django.db import models
 from main.config import setting
 
-# from .managers import MainUserManager
 
 setting.get_cached_configs()
 
@@ -22,6 +21,7 @@ class Organization(models.Model):
     def is_manager(self):
         if self.organization_id == setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
             return True
+        return False
 
 
 class MainUser(models.Model):
@@ -40,13 +40,16 @@ class MainUser(models.Model):
     def is_authenticated(self):
         if self.organization_id and self.user_id:
             return True
+        return False
 
     @property
     def is_anonymous(self):
         if not self.organization_id or not self.user_id:
             return True
+        return False
 
     @property
     def is_staff(self):
         if self.organization_id == setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
             return True
+        return False

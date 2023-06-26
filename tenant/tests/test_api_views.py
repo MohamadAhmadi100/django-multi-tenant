@@ -1,101 +1,146 @@
-# from unittest.mock import patch
-#
-# import factory
-# from main.config import setting
-# from rest_framework import status
-# from rest_framework.test import APIClient, APITestCase
-#
-# from tenant.models import Organization, MainUser
-#
-#
-# class OrganizationFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = Organization
-#
-#     name = factory.Faker('name')
-#     organization_id = factory.Faker('uuid4')
-#
-#
-# class MainUserFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = MainUser
-#
-#     user_id = factory.Faker('uuid4')
-#     email = factory.Faker('email')
-#     organization = factory.SubFactory(OrganizationFactory)
-#     active = True
-#
-#
-# class ListUsersViewTest(APITestCase):
-#
-#     def setUp(self):
-#         self.client = APIClient()
-#         self.organization = OrganizationFactory()
-#         self.user = MainUserFactory(organization=self.organization)
-#
-#     def test_list_users(self):
-#         response = self.client.get('/api/user/list', {'organization_id': self.organization.organization_id})
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(len(response.data), 1)
-#
-#
-# class RetrieveUserViewTest(APITestCase):
-#
-#     def setUp(self):
-#         self.client = APIClient()
-#         self.organization = OrganizationFactory()
-#         self.user = MainUserFactory(organization=self.organization)
-#
-#     def test_retrieve_user(self):
-#         auth0_domain = setting.AUTH0_JWKS_URL.split("/")[2]
-#         response = self.client.get(f'https://{auth0_domain}/userinfo',
-#                                    {'organization_id': self.organization.organization_id, 'user_id': self.user.user_id})
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(response.data['user_id'], str(self.user.user_id))
-#
-#
-# @patch('requests.get')
-# class GetUserDetailsFromAuth0Test(APITestCase):
-#
-#     def setUp(self):
-#         self.client = APIClient()
-#
-#     def test_get_user_details_from_auth0(self, mock_get):
-#         # Mocking the response from Auth0
-#         class MockResponse:
-#             @staticmethod
-#             def json():
-#                 return {'user': 'details'}
-#
-#             status_code = 200
-#
-#         mock_get.return_value = MockResponse()
-#         auth0_domain = setting.AUTH0_JWKS_URL.split("/")[2]
-#         response = self.client.get(f'https://{auth0_domain}/userinfo',
-#                                    HTTP_AUTHORIZATION='Bearer some_access_token')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(response.data, {'user': 'details'})
-#
-#
-# class RetrieveOrganizationViewTest(APITestCase):
-#
-#     def setUp(self):
-#         self.client = APIClient()
-#         self.organization = OrganizationFactory()
-#
-#     def test_retrieve_organization(self):
-#         response = self.client.get('/api/organization', {'organization_id': self.organization.organization_id})
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(response.data['organization_id'], str(self.organization.organization_id))
-#
-#
-# class ListOrganizationsViewTest(APITestCase):
-#
-#     def setUp(self):
-#         self.client = APIClient()
-#         self.organizations = OrganizationFactory.create_batch(5)
-#
-#     def test_list_organizations(self):
-#         response = self.client.get('/api/organization/list')
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(len(response.data), len(self.organizations))
+import pytest
+from main import settings
+from django.core import mail
+from main.config import setting
+import unittest.mock as mock
+from rest_framework.test import APIClient
+from django.test import override_settings
+from django.test import TestCase
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APIRequestFactory
+from unittest.mock import patch
+from tenant.models import Organization, MainUser
+from tenant.api_views import ListUsersView
+
+
+@pytest.fixture
+def client():
+    return APIClient()
+
+
+@pytest.fixture(autouse=True)
+def enable_email_capturing():
+    mail.outbox = []
+
+
+@pytest.fixture(autouse=True)
+def mock_django_db_setup(request, django_db_setup):
+    pass
+
+
+@pytest.fixture
+def setting_instance():
+    return settings()
+
+
+@pytest.fixture(autouse=True)
+def mock_setting():
+    with mock.patch("tenant.models.setting", setting):
+        yield setting
+
+
+pytestmark = pytest.mark.django_db
+
+
+@pytest.mark.django_db
+class ListUsersViewTest(TestCase):
+    pytestmark = pytest.mark.django_db
+
+    def setUp(self):
+        self.factory = APIRequestFactory()
+        self.view = ListUsersView.as_view()
+        self.url = reverse('list-users')
+
+    @patch('tenant.api_views.Organization.objects.filter')
+    @patch('tenant.api_views.MainUser.objects.filter')
+    def test_list_users(self, mock_main_user_filter, mock_organization_filter):
+        # Mock the organization and users
+        organization = Organization(name="Test Organization", organization_id="test_org_id")
+        user1 = MainUser(user_id="user1", organization=organization)
+        user2 = MainUser(user_id="user2", organization=organization)
+        users = [user1, user2]
+
+        # Configure the mocks
+        mock_organization_filter.return_value.first.return_value = organization
+        mock_main_user_filter.return_value.all.return_value = users
+
+        # Make a GET request to the API endpoint
+        request = self.factory.get(self.url)
+        response = self.view(request)
+
+        # Verify the response
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+
+@pytest.mark.django_db
+def test_organization_save(client):
+    organization = Organization(name="Test Organization", organization_id="org123")
+    organization.save()
+    assert organization.set_organization_id() == "org123"
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_organization_is_manager(client, mock_setting):
+    organization = Organization(organization_id="org123")
+    setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY = "org123"
+    assert organization.is_manager is True
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_organization_is_not_manager(client, mock_setting):
+    organization = Organization(organization_id="org123")
+    setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY = "otherorg"
+    assert organization.is_manager is False
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_str(client, mock_setting):
+    organization = Organization(name="Test Organization", organization_id="org123")
+    main_user = MainUser(user_id="user123", organization=organization)
+    assert str(main_user) == "userID: user123 organization: org123"
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_is_authenticated(client, mock_setting):
+    main_user = MainUser(user_id="user123", organization_id="org123")
+    assert main_user.is_authenticated is True
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_is_not_authenticated(client, mock_setting):
+    main_user = MainUser(user_id="", organization_id="org123")
+    assert main_user.is_authenticated is False
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_is_anonymous(client, mock_setting):
+    main_user = MainUser(user_id="", organization_id="org123")
+    assert main_user.is_anonymous is True
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_is_not_anonymous(client, mock_setting):
+    main_user = MainUser(user_id="user123", organization_id="org123")
+    assert main_user.is_anonymous is False
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_is_staff(client, mock_setting):
+    main_user = MainUser(user_id="user123", organization_id=setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY)
+    assert main_user.is_staff is True
+
+
+@pytest.mark.django_db
+@override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
+def test_main_user_is_not_staff(client, mock_setting):
+    main_user = MainUser(user_id="user123", organization_id="org123")
+    assert main_user.is_staff is False
