@@ -24,8 +24,8 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   before_script:
-    - apk add py3-pip
-    - pip3 install -r requirements.txt
+    - apk add py3.9-pip
+    - pip3 install -r coverage_requirements.txt
     - export DJANGO_SETTINGS_MODULE=main.settings
     - coverage run --source=. -m pytest
     - coverage xml -o coverage.xml
