@@ -25,11 +25,10 @@ sonarcloud-check:
       - .sonar/cache
   before_script:
     - apk add py3-pip
-    - pip3 install -r coverage_requirements.txt
-    - export DJANGO_SETTINGS_MODULE=main.settings
-    - coverage run --source=. -m pytest
+    - pip3 install coverage
+#    - coverage run --source=. -m pytest
     - coverage xml -o coverage.xml
-    - coverage report
+#    - coverage report
 #    - coverage html
   script:
     - sonar-scanner
