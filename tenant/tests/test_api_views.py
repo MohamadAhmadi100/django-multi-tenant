@@ -26,7 +26,7 @@ def enable_email_capturing():
 
 @pytest.fixture(autouse=True)
 def mock_django_db_setup(request, django_db_setup):
-    pass
+    pass  # mock setup database by pass
 
 
 @pytest.fixture
@@ -56,7 +56,7 @@ class ListUsersViewTest(TestCase):
     @patch('tenant.api_views.MainUser.objects.filter')
     def test_list_users(self, mock_main_user_filter, mock_organization_filter):
         # Mock the organization and users
-        organization = Organization(name="Test Organization", organization_id="test_org_id")
+        organization = Organization(name="Test Organization 1", organization_id="test_org_id")
         user1 = MainUser(user_id="user1", organization=organization)
         user2 = MainUser(user_id="user2", organization=organization)
         users = [user1, user2]
@@ -75,7 +75,7 @@ class ListUsersViewTest(TestCase):
 
 @pytest.mark.django_db
 def test_organization_save(client):
-    organization = Organization(name="Test Organization", organization_id="org123")
+    organization = Organization(name="Test Organization 2", organization_id="org123")
     organization.save()
     assert organization.set_organization_id() == "org123"
 
@@ -99,7 +99,7 @@ def test_organization_is_not_manager(client, mock_setting):
 @pytest.mark.django_db
 @override_settings(DATABASES={'default': {'ENGINE': 'django.db.backends.dummy'}})
 def test_main_user_str(client, mock_setting):
-    organization = Organization(name="Test Organization", organization_id="org123")
+    organization = Organization(name="Test Organization 3", organization_id="org123")
     main_user = MainUser(user_id="user123", organization=organization)
     assert str(main_user) == "userID: user123 organization: org123"
 

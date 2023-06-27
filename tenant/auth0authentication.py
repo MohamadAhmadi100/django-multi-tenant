@@ -114,5 +114,5 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
                 manager.create_organization_database(organization_id=organization_id)
         request.organization_id = payload.get("org_id")
         request.user_id = subject_claim.split('|')[1]
-        user, user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
+        user, _user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
         return user, organization

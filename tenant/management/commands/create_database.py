@@ -60,7 +60,7 @@ class OrganizationDatabaseManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.connection:
-            self.logger.info(f"Database connection pooling set")
+            self.logger.info("Database connection pooling set")
 
     def connect(self, dbname):
         try:
@@ -93,7 +93,6 @@ class OrganizationDatabaseManager:
                 }
             }
             self.logger.info(f"Connected to database {dbname} successfully.")
-            # return connection
         except Exception as error:
             self.logger.error(f"Error connecting database {dbname}: {error}")
             return None

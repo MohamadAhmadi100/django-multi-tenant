@@ -16,8 +16,8 @@ def trigger_error(request):
 
 class ListUsersView(APIView):
     def get(self, request):
+        trigger_error(request)
         organization_id = request.organization_id
-        user_id = request.user_id
         organization = Organization.objects.filter(organization_id=organization_id).first()
         if not organization:
             return Response({"error": "Organization not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -28,6 +28,7 @@ class ListUsersView(APIView):
 
 class RetrieveUserView(APIView):
     def get(self, request):
+        trigger_error(request)
         organization_id = request.organization_id
         user_id = request.user_id
         organization = Organization.objects.filter(organization_id=organization_id).first()
@@ -42,8 +43,8 @@ class RetrieveUserView(APIView):
 
 class RetrieveOrganizationView(APIView):
     def get(self, request):
+        trigger_error(request)
         organization_id = request.organization_id
-        user_id = request.user_id
         organization = Organization.objects.filter(organization_id=organization_id).first()
         if not organization:
             return Response({"error": "Organization not found."}, status=status.HTTP_404_NOT_FOUND)
@@ -55,6 +56,7 @@ class ListOrganizationsView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
+        trigger_error(request)
         organizations = Organization.objects.all()
         serializer = OrganizationSerializer(organizations, many=True)
         return Response(serializer.data)
@@ -65,6 +67,7 @@ class ConfigView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        trigger_error(request)
         try:
             configs = setting.get_client_response()
             return Response(configs, status=status.HTTP_200_OK)
@@ -77,6 +80,7 @@ class RefreshConsulConfigView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        trigger_error(request)
         try:
             setting.get_new_settings()
             return Response({'message': 'OK'}, status=status.HTTP_200_OK)
@@ -87,6 +91,7 @@ class RefreshConsulConfigView(APIView):
 class GetUserDetailsFromAuth0(APIView):
 
     def get(self, request):
+        trigger_error(request)
         access_token = request.headers.get('Authorization')
         if not access_token:
             return Response({"error": "Authorization header is required"}, status=status.HTTP_400_BAD_REQUEST)

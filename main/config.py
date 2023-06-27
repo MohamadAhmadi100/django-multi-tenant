@@ -70,7 +70,7 @@ class Setting:
         index, data = consul_client.kv.get(key="", recurse=True)
         return index, data
 
-    def convert_binary_to_dict(self, index, data):
+    def convert_binary_to_dict(self, data):
         for item in data:
             key = item['Key']
             value = item['Value']
@@ -112,7 +112,7 @@ class Setting:
 
     def refresh_variables(self):
         index, data = self.request_consul()
-        return self.convert_binary_to_dict(index, data)
+        return self.convert_binary_to_dict(data)
 
     def get_new_settings(self):
         self.refresh_variables()
