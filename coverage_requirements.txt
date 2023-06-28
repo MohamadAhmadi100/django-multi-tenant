@@ -18,3 +18,5 @@ django-cors-headers==4.0.0
 psycopg2-binary==2.9.6
 rest-framework-auth0==0.6.4
 djangorestframework-simplejwt==5.2.2
+python-jose==3.3.0
+colorlog==6.7.0
