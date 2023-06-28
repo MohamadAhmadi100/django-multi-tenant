@@ -9,6 +9,7 @@ from django.db import connections
 from django.db.utils import DatabaseError
 from main.config import setting
 from psycopg2 import sql
+import sentry_sdk
 
 setting.get_cached_configs()
 
@@ -94,6 +95,7 @@ class OrganizationDatabaseManager:
             }
             self.logger.info(f"Connected to database {dbname} successfully.")
         except Exception as error:
+            sentry_sdk.capture_exception(error)
             self.logger.error(f"Error connecting database {dbname}: {error}")
             return None
 
@@ -116,6 +118,7 @@ class OrganizationDatabaseManager:
             if "already exists" in str(error):
                 self.logger.warning(f"Database {organization_id} already exists.")
             else:
+                sentry_sdk.capture_exception(error)
                 self.logger.error(f"Error creating database {organization_id}: {error}")
         self.connect(organization_id)
         for app in setting.MIGRATION_APPS_LIST:
@@ -123,6 +126,9 @@ class OrganizationDatabaseManager:
                 call_command('migrate', app, database=organization_id)
                 self.logger.info(f"Migrations applied for {organization_id}.")
             except DatabaseError as e:
+                self.logger.error(f"Error running migrations: {e}")
+            except Exception as e:
+                sentry_sdk.capture_exception(e)
                 self.logger.error(f"Error running migrations: {e}")
             finally:
                 cursor.close()

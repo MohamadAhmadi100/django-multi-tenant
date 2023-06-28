@@ -2,6 +2,7 @@ import base64
 import logging
 
 import requests
+import sentry_sdk
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
 from django.core.cache import cache
@@ -57,6 +58,7 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
             header = jwt.get_unverified_header(token)
         except Exception as ex:
             logging.error(ex, exc_info=True)
+            sentry_sdk.capture_exception(ex)
             raise AuthenticationFailed('Error parsing token header.')
 
         try:
@@ -72,6 +74,7 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         except jwt.JWTClaimsError:
             raise AuthenticationFailed('Incorrect claims, please check the audience and issuer.')
         except Exception as ex:
+            sentry_sdk.capture_exception(ex)
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed('Error decoding token.')
 
@@ -93,26 +96,31 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         Authenticate the user using Auth0
         """
         # Extract token from Authorization header
-        auth_header = request.headers.get('Authorization')
-        token = self.get_token_from_header(auth_header)
+        try:
+            auth_header = request.headers.get('Authorization')
+            token = self.get_token_from_header(auth_header)
 
-        # Decode and validate the token
-        payload = self.decode_token(token)
+            # Decode and validate the token
+            payload = self.decode_token(token)
 
-        # Process and store relevant claims
-        subject_claim = payload.get('sub')
-        organization_id = payload.get("org_id")
-        user_id = subject_claim.split('|')[1] if subject_claim else None
+            # Process and store relevant claims
+            subject_claim = payload.get('sub')
+            organization_id = payload.get("org_id")
+            user_id = subject_claim.split('|')[1] if subject_claim else None
 
-        if not organization_id or not user_id:
-            raise AuthenticationFailed('Invalid token claims.')
+            if not organization_id or not user_id:
+                raise AuthenticationFailed('Invalid token claims.')
 
-        # Retrieve or create organization and user instances
-        organization, organization_created = Organization.objects.get_or_create(organization_id=organization_id)
-        if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
-            with OrganizationDatabaseManager() as manager:
-                manager.create_organization_database(organization_id=organization_id)
-        request.organization_id = payload.get("org_id")
-        request.user_id = subject_claim.split('|')[1]
-        user, _user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
-        return user, organization
+            # Retrieve or create organization and user instances
+            organization, organization_created = Organization.objects.get_or_create(organization_id=organization_id)
+            if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
+                with OrganizationDatabaseManager() as manager:
+                    manager.create_organization_database(organization_id=organization_id)
+            request.organization_id = payload.get("org_id")
+            request.user_id = subject_claim.split('|')[1]
+            user, _user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
+            return user, organization
+        except Exception as ex:
+            sentry_sdk.capture_exception(ex)
+            logging.error(ex, exc_info=True)
+            raise AuthenticationFailed('Unknown Error')
