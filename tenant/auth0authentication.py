@@ -123,4 +123,4 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         except Exception as ex:
             sentry_sdk.capture_exception(ex)
             logging.error(ex, exc_info=True)
-            raise AuthenticationFailed('Unknown Error')
+            raise AuthenticationFailed(ex)
