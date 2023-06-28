@@ -45,6 +45,7 @@ class Setting:
         self.DATABASE_SERVER_CA_PATH = None
         # sentry
         self.SENTRY_DSN = None
+        self.TEST_MJ = None
         self.MIGRATION_APPS_LIST = ["tenant"]
 
     def create_certificate_files(self):
@@ -109,6 +110,7 @@ class Setting:
         self.DATABASE_SERVER_CA_PATH = os.path.join(BASE_DIR, "certificate/server-ca.pem")
 
         self.SENTRY_DSN = self.variables.get("Spov/Sentry/API_DSN", None)
+        self.TEST_MJ = self.variables.get("mj", None)
 
     def refresh_variables(self):
         index, data = self.request_consul()
@@ -150,6 +152,7 @@ class Setting:
 
             split_key = key.split('/')
             if len(split_key) < 3:
+                api_output[split_key[0]] = value
                 continue
 
             first_level_key, second_level_key, third_level_key = split_key
