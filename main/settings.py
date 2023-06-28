@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "djoser",
     "corsheaders",
-    'drf_yasg',
     'rest_framework_simplejwt',
     'consul',
     # apps

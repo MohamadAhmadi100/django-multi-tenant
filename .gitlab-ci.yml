@@ -28,7 +28,7 @@ sonarcloud-check:
     - python3 --version
     - pip3 --version
 #    - apk add py3-pip
-    - pip install -r coverage_requirements2.txt
+    - pip install -r requirements.txt
     - export DJANGO_SETTINGS_MODULE=main.settings
     - coverage run --source=. -m pytest
     - coverage report
