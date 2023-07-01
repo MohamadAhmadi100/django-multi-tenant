@@ -106,8 +106,9 @@ class GetUserDetailsFromAuth0(APIView):
                 return Response({"error": "Authorization header is required"}, status=status.HTTP_400_BAD_REQUEST)
             auth0_domain = setting.AUTH0_JWKS_URL.split("/")[2]
             auth0_userinfo_url = f'https://{auth0_domain}/userinfo'
-
+            print("sending request to auth0...")
             response = requests.get(auth0_userinfo_url, headers={'Authorization': access_token})
+            print(response.json())
 
             if response.status_code == 200:
                 return Response(response.json(), status=status.HTTP_200_OK)
