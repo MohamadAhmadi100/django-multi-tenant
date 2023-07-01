@@ -114,7 +114,7 @@ cython_debug/
 instance/*
 !instance/.gitignore
 
-
+static/
 .idea*
 .idea/**/workspace.xml
 .idea/**/tasks.xml
