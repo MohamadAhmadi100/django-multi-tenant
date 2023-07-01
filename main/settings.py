@@ -11,7 +11,11 @@ SECRET_KEY = setting.SECRET_KEY
 DEBUG = setting.DEBUG
 
 ALLOWED_HOSTS = ["*"]
-# CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ALLOWED_ORIGINS = [
+    "https://spov.p1ade.ir",
+    "https://develop.spovdev.com"
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
