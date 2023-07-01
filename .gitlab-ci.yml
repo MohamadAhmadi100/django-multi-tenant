@@ -30,12 +30,16 @@ sonarcloud-check:
 #    - apk add py3-pip
     - pip install -r coverage_requirements.txt
     - export DJANGO_SETTINGS_MODULE=main.settings
-    - coverage run --source=. -m pytest
-    - coverage report
+    - coverage run -m pytest
     - coverage xml -o coverage.xml
-    - coverage html
   script:
-    - sonar-scanner -Dproject.settings=sonar-project.properties -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+    - sonar-scanner -Dsonar.projectKey=sponix-team_coretest \
+      -Dsonar.organization=sponix-team \
+      -Dsonar.sources=. \
+      -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+      -Dsonar.host.url=$SONAR_HOST_URL \
+      -Dsonar.login=$SONAR_TOKEN \
+      -Dsonar.python.coverage.reportPath=./coverage.xml
 
 
 build_core_test:
