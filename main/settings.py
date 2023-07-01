@@ -5,6 +5,8 @@ from sentry_sdk.integrations.django import DjangoIntegration
 
 from .config import setting
 
+print('django setting...')
+
 setting.get_cached_configs()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = setting.SECRET_KEY
@@ -99,9 +101,8 @@ DATABASES = {
 }
 DATABASE_ROUTERS = ['tenant.router.OrganizationDatabaseRouter']
 
-AUTHENTICATION_BACKENDS = [
-    'tenant.auth_backends.Auth0Backend',
-]
+
+
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
@@ -156,7 +157,6 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = True
 
 # Static Files
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
