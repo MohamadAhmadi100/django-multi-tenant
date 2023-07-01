@@ -33,13 +33,7 @@ sonarcloud-check:
     - coverage run -m pytest
     - coverage xml -o coverage.xml
   script:
-    - sonar-scanner -Dsonar.projectKey=sponix-team_coretest \
-      -Dsonar.organization=sponix-team \
-      -Dsonar.sources=. \
-      -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-      -Dsonar.host.url=$SONAR_HOST_URL \
-      -Dsonar.login=$SONAR_TOKEN \
-      -Dsonar.python.coverage.reportPath=./coverage.xml
+    - sonar-scanner -Dsonar.projectKey=sponix-team_coretest -Dsonar.organization=sponix-team -Dsonar.sources=. -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN -Dsonar.python.coverage.reportPath=./coverage.xml
 
 
 build_core_test:
