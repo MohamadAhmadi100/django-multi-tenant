@@ -11,6 +11,7 @@ SECRET_KEY = setting.SECRET_KEY
 DEBUG = setting.DEBUG
 
 ALLOWED_HOSTS = ["*"]
+CORS_ORIGIN_ALLOW_ALL = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -31,6 +32,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -40,7 +42,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'django.contrib.auth.middleware.RemoteUserMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    
 ]
 
 SWAGGER_SETTINGS = {

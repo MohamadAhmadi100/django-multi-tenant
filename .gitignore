@@ -202,3 +202,7 @@ pip-selfcheck.json
 .ionide
 
 !.vscode/*.code-snippets
+
+
+#sonar
+.scannerwork/
