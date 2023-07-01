@@ -100,6 +100,7 @@ class OrganizationDatabaseManager:
             return None
 
     def create_organization_database(self, organization_id):
+        print("create_organization_database...")
         if self.connection is None:
             self.logger.error("No database connection established")
             return
@@ -109,6 +110,7 @@ class OrganizationDatabaseManager:
             cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (organization_id,))
             exists = cursor.fetchone()
             if not exists:
+                print("database not found crating...")
                 create_database_sql = sql.SQL("CREATE DATABASE {}").format(sql.Identifier(organization_id))
                 cursor.execute(create_database_sql)
                 self.logger.info(f"Database {organization_id} created successfully.")

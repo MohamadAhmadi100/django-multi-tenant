@@ -102,8 +102,9 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
 
         try:
             auth_header = request.headers.get('Authorization')
+            print("auth header " , auth_header)
             token = self.get_token_from_header(auth_header)
-
+            print("token ", token)
             # Decode and validate the token
             payload = self.decode_token(token)
 
@@ -116,7 +117,10 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
                 raise AuthenticationFailed('Invalid token claims.')
 
             # Retrieve or create organization and user instances
+            print("befor create database")
             organization, organization_created = Organization.objects.get_or_create(organization_id=organization_id)
+
+            print("organization:" , organization_id, organization_created)
             if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
                 with OrganizationDatabaseManager() as manager:
                     manager.create_organization_database(organization_id=organization_id)
