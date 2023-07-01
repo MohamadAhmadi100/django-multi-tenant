@@ -70,6 +70,7 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
                 audience=setting.AUTH0_AUDIENCE
             )
         except jwt.ExpiredSignatureError:
+            print("token expired....")
             raise AuthenticationFailed('Token has expired.')
         except jwt.JWTClaimsError:
             raise AuthenticationFailed('Incorrect claims, please check the audience and issuer.')
@@ -96,6 +97,9 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         Authenticate the user using Auth0
         """
         # Extract token from Authorization header
+
+        print("authenticating...")
+
         try:
             auth_header = request.headers.get('Authorization')
             token = self.get_token_from_header(auth_header)
@@ -119,8 +123,10 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
             request.organization_id = payload.get("org_id")
             request.user_id = subject_claim.split('|')[1]
             user, _user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
+            print("authenticated")
             return user, organization
         except Exception as ex:
+            print("error")
             sentry_sdk.capture_exception(ex)
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed(ex)

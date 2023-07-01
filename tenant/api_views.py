@@ -100,12 +100,16 @@ class RefreshConsulConfigView(APIView):
 class GetUserDetailsFromAuth0(APIView):
 
     def get(self, request):
+        print("api list request recived")
         try:
             access_token = request.headers.get('Authorization')
+
             if not access_token:
                 return Response({"error": "Authorization header is required"}, status=status.HTTP_400_BAD_REQUEST)
+
             auth0_domain = setting.AUTH0_JWKS_URL.split("/")[2]
             auth0_userinfo_url = f'https://{auth0_domain}/userinfo'
+            print(auth0_userinfo_url)
             print("sending request to auth0...")
             response = requests.get(auth0_userinfo_url, headers={'Authorization': access_token})
             print(response.json())
@@ -115,5 +119,6 @@ class GetUserDetailsFromAuth0(APIView):
             else:
                 return Response(response.json(), status=response.status_code)
         except Exception as e:
+            print("return 503 ....")
             sentry_sdk.capture_exception(e)
             return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
