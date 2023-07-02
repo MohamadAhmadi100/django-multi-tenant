@@ -106,7 +106,7 @@ class OrganizationDatabaseManager:
                     call_command('migrate', app, database=organization_id)
                     self.logger.info(f"Migrations applied for {organization_id}.")
                 except DatabaseError as e:
-                    sentry_sdk.capture_exception(error)
+                    sentry_sdk.capture_exception(e)
                     self.logger.error(f"Error running migrations: {e}")
                 except Exception as e:
                     sentry_sdk.capture_exception(e)
