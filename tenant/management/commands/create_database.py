@@ -1,6 +1,5 @@
 import logging
 import os
-from time import strftime, localtime
 
 import colorlog
 from django.conf import settings
@@ -30,49 +29,29 @@ class OrganizationDatabaseManager:
         self.db_host = setting.DATABASE_HOST
         self.connection = None
 
-        # Set up logger
-        self.now = str(strftime("%Y-%m-%d %H:%M:%S", localtime())).replace(" ", "-")
         self.logger = logging.getLogger('TenantDatabaseManager')
+        self.setup_logger()
+
+    def setup_logger(self):
         self.logger.setLevel(logging.DEBUG)
-
-        # Set up colored logs
-        if not OrganizationDatabaseManager._handlers_set:
-            cformat = "%(log_color)s [%(levelname)s] [%(asctime)s]  %(reset)s%(message)s"
-            colors = {'DEBUG': 'cyan', 'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red', 'CRITICAL': 'red'}
-            formatter = colorlog.ColoredFormatter(cformat, log_colors=colors)
-
-            # Console handler
-            console_handler = logging.StreamHandler()
-            console_handler.setFormatter(formatter)
-            self.logger.addHandler(console_handler)
-
-            # File handler
-            file_handler = logging.FileHandler('organization_database_manager.log')
-            file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-            file_handler.setFormatter(file_formatter)
-            self.logger.addHandler(file_handler)
-
-            OrganizationDatabaseManager._handlers_set = True
-
-    def __enter__(self, db_name=None):
-        db_name = db_name if db_name else self.db_name
-        self.connect(db_name)
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        if self.connection:
-            self.logger.info("Database connection pooling set")
+        formatter = colorlog.ColoredFormatter(
+            "%(log_color)s [%(levelname)s] [%(asctime)s]  %(reset)s%(message)s",
+            log_colors={'DEBUG': 'cyan', 'INFO': 'green', 'WARNING': 'yellow', 'ERROR': 'red', 'CRITICAL': 'red'}
+        )
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        self.logger.addHandler(console_handler)
 
     def connect(self, dbname):
         try:
             dbname = dbname.lower()
-            settings.DATABASES[dbname] = {
+            conn_params = {
                 'ENGINE': 'django.db.backends.postgresql',
                 'NAME': dbname,
                 'USER': self.db_user,
                 'PASSWORD': self.db_password,
                 'HOST': self.db_host,
-                'PORT': '',
+                'PORT': '5432',
                 'TIME_ZONE': 'UTC',
                 'CONN_HEALTH_CHECKS': {
                     'ENABLED': True,
@@ -93,50 +72,42 @@ class OrganizationDatabaseManager:
                     "CONN_MAX_AGE": 1800
                 }
             }
+            connections.databases[dbname] = conn_params
+            self.connection = connections[dbname].cursor().connection
             self.logger.info(f"Connected to database {dbname} successfully.")
+            return self.connection
         except Exception as error:
             sentry_sdk.capture_exception(error)
-            self.logger.error(f"Error connecting database {dbname}: {error}")
+            self.logger.error(f"Error connecting to database {dbname}: {error}")
             return None
 
     def create_organization_database(self, organization_id):
-        print("create_organization_database...")
-        if self.connection is None:
-            self.logger.error("No database connection established")
-            return
-        cursor = self.connection.cursor()
-        try:
-            organization_id = organization_id.lower()
-            cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (organization_id,))
-            exists = cursor.fetchone()
-            if not exists:
-                print("database not found crating...")
-                create_database_sql = sql.SQL("CREATE DATABASE {}").format(sql.Identifier(organization_id))
-                cursor.execute(create_database_sql)
-                self.logger.info(f"Database {organization_id} created successfully.")
-            else:
-                self.logger.info(f"Database {organization_id} already exists. Continuing without creation.")
-        except Exception as error:
-            if "already exists" in str(error):
-                self.logger.warning(f"Database {organization_id} already exists.")
-            else:
-                sentry_sdk.capture_exception(error)
-                self.logger.error(f"Error creating database {organization_id}: {error}")
-        self.connect(organization_id)
-        for app in setting.MIGRATION_APPS_LIST:
+        self.connect(self.db_name)
+        with self.connection.cursor() as cursor:
             try:
-                call_command('migrate', app, database=organization_id)
-                self.logger.info(f"Migrations applied for {organization_id}.")
-            except DatabaseError as e:
-                self.logger.error(f"Error running migrations: {e}")
-            except Exception as e:
-                sentry_sdk.capture_exception(e)
-                self.logger.error(f"Error running migrations: {e}")
-            finally:
-                cursor.close()
-        connections.close_all()
-
-
-if __name__ == "__main__":
-    with OrganizationDatabaseManager() as manager:
-        manager.create_organization_database("new_organization_db")
+                organization_id = organization_id.lower()
+                cursor.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (organization_id,))
+                exists = cursor.fetchone()
+                if not exists:
+                    create_database_sql = sql.SQL("CREATE DATABASE {}").format(sql.Identifier(organization_id))
+                    cursor.execute(create_database_sql)
+                    self.logger.info(f"Database {organization_id} created successfully.")
+                else:
+                    self.logger.info(f"Database {organization_id} already exists. Continuing without creation.")
+            except Exception as error:
+                if "already exists" in str(error):
+                    self.logger.warning(f"Database {organization_id} already exists.")
+                else:
+                    sentry_sdk.capture_exception(error)
+                    self.logger.error(f"Error creating database {organization_id}: {error}")
+            self.connect(organization_id)
+            for app in setting.MIGRATION_APPS_LIST:
+                try:
+                    call_command('migrate', app, database=organization_id)
+                    self.logger.info(f"Migrations applied for {organization_id}.")
+                except DatabaseError as e:
+                    sentry_sdk.capture_exception(error)
+                    self.logger.error(f"Error running migrations: {e}")
+                except Exception as e:
+                    sentry_sdk.capture_exception(e)
+                    self.logger.error(f"Error running migrations: {e}")

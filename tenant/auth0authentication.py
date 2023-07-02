@@ -70,7 +70,6 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
                 audience=setting.AUTH0_AUDIENCE
             )
         except jwt.ExpiredSignatureError:
-            print("token expired....")
             raise AuthenticationFailed('Token has expired.')
         except jwt.JWTClaimsError:
             raise AuthenticationFailed('Incorrect claims, please check the audience and issuer.')
@@ -89,7 +88,6 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         parts = auth_header.split()
         if parts[0].lower() != 'bearer' or len(parts) != 2:
             raise AuthenticationFailed('Invalid authorization header format.')
-
         return parts[1]
 
     def authenticate(self, request):
@@ -97,14 +95,9 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         Authenticate the user using Auth0
         """
         # Extract token from Authorization header
-
-        print("authenticating...")
-
         try:
             auth_header = request.headers.get('Authorization')
-            print("auth header " , auth_header)
             token = self.get_token_from_header(auth_header)
-            print("token ", token)
             # Decode and validate the token
             payload = self.decode_token(token)
 
@@ -117,20 +110,16 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
                 raise AuthenticationFailed('Invalid token claims.')
 
             # Retrieve or create organization and user instances
-            print("befor create database")
             organization, organization_created = Organization.objects.get_or_create(organization_id=organization_id)
 
-            print("organization:" , organization_id, organization_created)
-            if organization_created and organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
-                with OrganizationDatabaseManager() as manager:
-                    manager.create_organization_database(organization_id=organization_id)
+            if organization_id != setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
+                db_manager = OrganizationDatabaseManager()
+                db_manager.create_organization_database(organization_id=organization_id)
             request.organization_id = payload.get("org_id")
             request.user_id = subject_claim.split('|')[1]
             user, _user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
-            print("authenticated")
             return user, organization
         except Exception as ex:
-            print("error")
             sentry_sdk.capture_exception(ex)
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed(ex)

@@ -1,11 +1,10 @@
-from pathlib import Path
 import os
+from pathlib import Path
+
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 from .config import setting
-
-print('django setting...')
 
 setting.get_cached_configs()
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -70,7 +69,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'django.contrib.auth.middleware.RemoteUserMiddleware',
-    
+
 ]
 
 SWAGGER_SETTINGS = {
@@ -99,8 +98,6 @@ TEMPLATES = [
         },
     },
 ]
-
-
 WSGI_APPLICATION = 'main.wsgi.application'
 DATABASES = {
     'default': {
@@ -122,8 +119,6 @@ DATABASES = {
     }
 }
 DATABASE_ROUTERS = ['tenant.router.OrganizationDatabaseRouter']
-
-
 
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -179,7 +174,6 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
 # Static Files
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
@@ -187,7 +181,6 @@ STATIC_URL = '/static/'
 # Media Settings
 MEDIA_URL = '/files/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'files')
-
 
 # sentry
 sentry_sdk.init(
