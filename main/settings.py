@@ -14,11 +14,32 @@ DEBUG = setting.DEBUG
 
 ALLOWED_HOSTS = ["*"]
 # CORS_ORIGIN_ALLOW_ALL = True
+
+CSRF_TRUSTED_ORIGINS = ["https://spov.p1ade.ir", "https://develop.spovdev.com"]
+CORS_ALLOWED_ORIGINS = [
+    "https://spov.p1ade.ir",
+    "https://develop.spovdev.com"
+]
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
+
 CORS_ALLOW_ALL_ORIGINS = True
-# CORS_ALLOWED_ORIGINS = [
-#     "https://spov.p1ade.ir",
-#     "https://develop.spovdev.com"
-# ]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
