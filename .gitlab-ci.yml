@@ -24,14 +24,13 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   before_script:
-      - echo "Writing GitLab variables to $ENV_FILE"
-      - |
-      rm -f $ENV_FILE
-      touch $ENV_FILE
-      echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
-      echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
-      echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
-      echo CONSUL_PORT=443 >> $ENV_FILE
+    - echo "Writing GitLab variables to $ENV_FILE"
+    - rm -f $ENV_FILE
+    - touch $ENV_FILE
+    - echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
+    - echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
+    - echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
+    - echo CONSUL_PORT=443 >> $ENV_FILE
     - echo "GitLab variables written to $ENV_FILE"
     - ls
     - apk add --no-cache python3
@@ -56,13 +55,12 @@ build_core_test:
   before_script:
     - apt-get update && apt-get install -y nano
     - echo "Writing GitLab variables to $ENV_FILE"
-    - |
-      rm -f $ENV_FILE
-      touch $ENV_FILE
-      echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
-      echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
-      echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
-      echo CONSUL_PORT=443 >> $ENV_FILE
+    - rm -f $ENV_FILE
+    - touch $ENV_FILE
+    - echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
+    - echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
+    - echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
+    - echo CONSUL_PORT=443 >> $ENV_FILE
     - echo "GitLab variables written to $ENV_FILE"
     - ls
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
