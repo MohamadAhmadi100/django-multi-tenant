@@ -67,8 +67,8 @@ COPY ./entrypoint.sh $APP_HOME
 
 # copy project
 COPY . $APP_HOME
-COPY static $APP_HOME
-COPY .env $APP_HOME/.env
+# COPY static $APP_HOME
+# COPY .env $APP_HOME/.env
 
 #RUN apt-get update && apt-get -y dist-upgrade
 #RUN apt-get install -y netcat

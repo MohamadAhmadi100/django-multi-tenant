@@ -114,6 +114,7 @@ instance/*
 !instance/.gitignore
 
 static/
+!static/__init__.py
 .idea*
 .idea/**/workspace.xml
 .idea/**/tasks.xml
