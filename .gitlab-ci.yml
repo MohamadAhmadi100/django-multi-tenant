@@ -32,8 +32,6 @@ sonarcloud-check:
     - echo CONSUL_PORT=443 >> $ENV_FILE
     - apk add --no-cache python3
     - pip install -r requirements.txt
-    - chmod +x sonar_entrypoint.sh
-    - ./sonar_entrypoint.sh
     - export DJANGO_SETTINGS_MODULE=main.settings
     - coverage run -m pytest
     - coverage xml -o coverage.xml
