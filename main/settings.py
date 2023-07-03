@@ -10,6 +10,15 @@ setting.get_cached_configs()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = setting.SECRET_KEY
 DEBUG = setting.DEBUG
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'core-cache',
+    }
+}
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 86400
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
 ALLOWED_HOSTS = ["*"]
 # CORS_ORIGIN_ALLOW_ALL = True
