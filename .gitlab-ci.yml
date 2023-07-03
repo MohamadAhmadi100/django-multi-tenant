@@ -30,9 +30,11 @@ sonarcloud-check:
     - echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
     - echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
     - echo CONSUL_PORT=443 >> $ENV_FILE
+    - ls -la
     - apk add --no-cache python3
     - pip install -r requirements.txt
     - export DJANGO_SETTINGS_MODULE=main.settings
+    - pytest
     - coverage run -m pytest
     - coverage xml -o coverage.xml
   script:
