@@ -116,14 +116,15 @@ class Setting:
         index, data = self.request_consul()
         return self.convert_binary_to_dict(data)
 
+    def set_cache(self):
+        cache.delete("variables")
+        cache.set("variables", self.variables, 86400)
+
     def get_new_settings(self):
         self.refresh_variables()
         self.set_values()
         self.create_certificate_files()
         self.set_cache()
-
-    def set_cache(self):
-        cache.set("variables", self.variables, 86400)
 
     def get_cached_configs(self):
         variables = cache.get("variables")
