@@ -24,6 +24,16 @@ sonarcloud-check:
     paths:
       - .sonar/cache
   before_script:
+      - echo "Writing GitLab variables to $ENV_FILE"
+    - |
+      rm -f $ENV_FILE
+      touch $ENV_FILE
+      echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
+      echo CONSUL_TOKEN=$CONSUL_TOKEN >> $ENV_FILE
+      echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
+      echo CONSUL_PORT=443 >> $ENV_FILE
+    - echo "GitLab variables written to $ENV_FILE"
+    - ls
     - apk add --no-cache python3
     - python3 --version
     - pip3 --version
