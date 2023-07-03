@@ -25,7 +25,7 @@ sonarcloud-check:
       - .sonar/cache
   before_script:
       - echo "Writing GitLab variables to $ENV_FILE"
-    - |
+      - |
       rm -f $ENV_FILE
       touch $ENV_FILE
       echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
