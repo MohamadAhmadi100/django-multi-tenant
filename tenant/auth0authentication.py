@@ -58,7 +58,6 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
             header = jwt.get_unverified_header(token)
         except Exception as ex:
             logging.error(ex, exc_info=True)
-            sentry_sdk.capture_exception(ex)
             raise AuthenticationFailed('Error parsing token header.')
 
         try:
@@ -74,7 +73,6 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         except jwt.JWTClaimsError:
             raise AuthenticationFailed('Incorrect claims, please check the audience and issuer.')
         except Exception as ex:
-            sentry_sdk.capture_exception(ex)
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed('Error decoding token.')
 
@@ -120,6 +118,5 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
             user, _user_created = MainUser.objects.get_or_create(user_id=request.user_id, organization=organization)
             return user, organization
         except Exception as ex:
-            sentry_sdk.capture_exception(ex)
             logging.error(ex, exc_info=True)
             raise AuthenticationFailed(ex)
