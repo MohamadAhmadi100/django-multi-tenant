@@ -18,7 +18,7 @@ class Setting:
         self.CONSUL_PORT = os.getenv("CONSUL_PORT")
         self.CONSUL_TOKEN = os.getenv("CONSUL_TOKEN")
         self.DEBUG: bool = True if os.getenv("DEBUG_MODE") == "true" else False
-        self.SECRET_KEY: str = os.getenv('SECRET_KEY')
+        self.SECRET_KEY: str = os.getenv("SECRET_KEY")
         self.variables = dict()
         # auth0
         self.AUTH0_CLIENT_ID = None
@@ -37,7 +37,9 @@ class Setting:
         self.DATABASE_PASSWORD = None
         self.DATABASE_HOST = None
         self.DATABASE_PORT = None
-        self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
+        self.DATABASE_CLIENT_CERT = self.variables.get(
+            "Spov/Database/CLIENT_CERT", None
+        )
         self.DATABASE_CLIENT_CERT_PATH = None
         self.DATABASE_CLIENT_KEY = self.variables.get("Spov/Database/CLIENT_KEY", None)
         self.DATABASE_CLIENT_KEY_PATH = None
@@ -67,18 +69,19 @@ class Setting:
             port=self.CONSUL_PORT,
             token=self.CONSUL_TOKEN,
             scheme="https",
-            verify=True)
+            verify=True,
+        )
         index, data = consul_client.kv.get(key="", recurse=True)
         return index, data
 
     def convert_binary_to_dict(self, data):
         for item in data:
-            key = item['Key']
-            value = item['Value']
+            key = item["Key"]
+            value = item["Value"]
             if value:
-                value = value.decode('utf-8')
+                value = value.decode("utf-8")
                 if type(value) == bytes:
-                    value += '=' * ((4 - len(value) % 4) % 4)
+                    value += "=" * ((4 - len(value) % 4) % 4)
                     value = base64.b64decode(value)
             self.variables[key] = value
         return self.variables
@@ -86,28 +89,53 @@ class Setting:
     def set_values(self):
         # auth0
         self.AUTH0_CLIENT_ID = self.variables.get("Spov/Authentication/CLIENT_ID", None)
-        self.AUTH0_CLIENT_SECRET = self.variables.get("Spov/Authentication/CLIENT_SECRET", None)
+        self.AUTH0_CLIENT_SECRET = self.variables.get(
+            "Spov/Authentication/CLIENT_SECRET", None
+        )
         self.AUTH0_AUDIENCE = self.variables.get("Spov/Authentication/AUDIENCE", None)
-        self.AUTH0_AUTHORIZATION_URL = self.variables.get("Spov/Authentication/AUTHORIZATION_URL", None)
+        self.AUTH0_AUTHORIZATION_URL = self.variables.get(
+            "Spov/Authentication/AUTHORIZATION_URL", None
+        )
         self.AUTH0_JWKS_URL = self.variables.get("Spov/Authentication/JWKS_URL", None)
-        self.AUTH0_MANAGEMENT_ORGANIZATION_KEY = self.variables.get("Spov/Authentication/MANAGEMENT_ORGANIZATION_KEY",
-                                                                    None)
+        self.AUTH0_MANAGEMENT_ORGANIZATION_KEY = self.variables.get(
+            "Spov/Authentication/MANAGEMENT_ORGANIZATION_KEY", None
+        )
         self.AUTH0_TOKEN_URL = self.variables.get("Spov/Authentication/TOKEN_URL", None)
-        self.AUTH0_CALLBACK_URL = self.variables.get("Spov/Authentication/CALLBACK_URL", None)
+        self.AUTH0_CALLBACK_URL = self.variables.get(
+            "Spov/Authentication/CALLBACK_URL", None
+        )
         self.AUTH0_LOGIN_URL = self.variables.get("Spov/Authentication/LOGIN_URL", None)
-        self.AUTH0_LOGOUT_URL = self.variables.get("Spov/Authentication/LOGOUT_URL", None)
+        self.AUTH0_LOGOUT_URL = self.variables.get(
+            "Spov/Authentication/LOGOUT_URL", None
+        )
         # database
-        self.DATABASE_NAME = self.variables.get("Spov/Database/NAME", None)
-        self.DATABASE_USER = self.variables.get("Spov/Database/USERNAME", None)
-        self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)
-        self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)
+        self.DATABASE_NAME = self.variables.get(
+            "Spov/Database/NAME", None
+        )
+        self.DATABASE_USER = self.variables.get(
+            "Spov/Database/USERNAME", None
+        )
+        self.DATABASE_PASSWORD = self.variables.get(
+            "Spov/Database/PASSWORD", None
+        )
+        self.DATABASE_HOST = self.variables.get(
+            "Spov/Database/HOST", None
+        )
         self.DATABASE_PORT = self.variables.get("Spov/Database/PORT", 5432)
-        self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
-        self.DATABASE_CLIENT_CERT_PATH = os.path.join(BASE_DIR, 'certificate/client-cert.pem')
+        self.DATABASE_CLIENT_CERT = self.variables.get(
+            "Spov/Database/CLIENT_CERT", None
+        )
+        self.DATABASE_CLIENT_CERT_PATH = os.path.join(
+            BASE_DIR, "certificate/client-cert.pem"
+        )
         self.DATABASE_CLIENT_KEY = self.variables.get("Spov/Database/CLIENT_KEY", None)
-        self.DATABASE_CLIENT_KEY_PATH = os.path.join(BASE_DIR, 'certificate/client-key.pem')
+        self.DATABASE_CLIENT_KEY_PATH = os.path.join(
+            BASE_DIR, "certificate/client-key.pem"
+        )
         self.DATABASE_SERVER_CA = self.variables.get("Spov/Database/SERVER_CA", None)
-        self.DATABASE_SERVER_CA_PATH = os.path.join(BASE_DIR, "certificate/server-ca.pem")
+        self.DATABASE_SERVER_CA_PATH = os.path.join(
+            BASE_DIR, "certificate/server-ca.pem"
+        )
 
         self.SENTRY_DSN = self.variables.get("Spov/Sentry/API_DSN", None)
         self.TEST_MJ = self.variables.get("mj", None)
@@ -151,7 +179,7 @@ class Setting:
             if not value:
                 continue
 
-            split_key = key.split('/')
+            split_key = key.split("/")
             if len(split_key) < 3:
                 api_output[split_key[0]] = value
                 continue
@@ -164,5 +192,5 @@ class Setting:
 
 
 setting = Setting()
-if __name__ == '__main__':
+if __name__ == "__main__":
     setting.get_new_settings()

@@ -11,23 +11,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = setting.SECRET_KEY
 DEBUG = setting.DEBUG
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'core-cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "core-cache",
     }
 }
-CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_ALIAS = "default"
 CACHE_MIDDLEWARE_SECONDS = 86400
-CACHE_MIDDLEWARE_KEY_PREFIX = ''
+CACHE_MIDDLEWARE_KEY_PREFIX = ""
 
 ALLOWED_HOSTS = ["*"]
 # CORS_ORIGIN_ALLOW_ALL = True
 
 CSRF_TRUSTED_ORIGINS = ["https://spov.p1ade.ir", "https://develop.spovdev.com"]
-CORS_ALLOWED_ORIGINS = [
-    "https://spov.p1ade.ir",
-    "https://develop.spovdev.com"
-]
+CORS_ALLOWED_ORIGINS = ["https://spov.p1ade.ir", "https://develop.spovdev.com"]
 
 CORS_ALLOW_METHODS = (
     "DELETE",
@@ -50,146 +47,131 @@ CORS_ALLOW_HEADERS = (
 CORS_ALLOW_ALL_ORIGINS = True
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
     # 3rd party apps
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
     "corsheaders",
-    'rest_framework_simplejwt',
-    'consul',
+    "rest_framework_simplejwt",
+    "consul",
     # apps
-    'tenant.apps.TenantConfig',
+    "tenant.apps.TenantConfig",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    'django.contrib.auth.middleware.RemoteUserMiddleware',
-
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django.contrib.auth.middleware.RemoteUserMiddleware",
 ]
 
 SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'DRF Token': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
-        }
+    "SECURITY_DEFINITIONS": {
+        "DRF Token": {"type": "apiKey", "name": "Authorization", "in": "header"}
     }
 }
-ROOT_URLCONF = 'main.urls'
+ROOT_URLCONF = "main.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
-WSGI_APPLICATION = 'main.wsgi.application'
+WSGI_APPLICATION = "main.wsgi.application"
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': setting.DATABASE_NAME,
-        'USER': setting.DATABASE_USER,
-        'PASSWORD': setting.DATABASE_PASSWORD,
-        'HOST': setting.DATABASE_HOST,
-        'PORT': setting.DATABASE_PORT,
-        'OPTIONS': {
-            'sslmode': 'require',
-            'sslrootcert': os.path.join(BASE_DIR, 'certificate/server-ca.pem'),
-            'sslcert': os.path.join(BASE_DIR, 'certificate/client-cert.pem'),
-            'sslkey': os.path.join(BASE_DIR, 'certificate/client-key.pem'),
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": setting.DATABASE_NAME,
+        "USER": setting.DATABASE_USER,
+        "PASSWORD": setting.DATABASE_PASSWORD,
+        "HOST": setting.DATABASE_HOST,
+        "PORT": setting.DATABASE_PORT,
+        "OPTIONS": {
+            "sslmode": "require",
+            "sslrootcert": os.path.join(BASE_DIR, "certificate/server-ca.pem"),
+            "sslcert": os.path.join(BASE_DIR, "certificate/client-cert.pem"),
+            "sslkey": os.path.join(BASE_DIR, "certificate/client-key.pem"),
         },
-        "default": {
-            "CONN_MAX_AGE": 1800
-        }
+        "default": {"CONN_MAX_AGE": 1800},
     }
 }
-DATABASE_ROUTERS = ['tenant.router.OrganizationDatabaseRouter']
+DATABASE_ROUTERS = ["tenant.router.OrganizationDatabaseRouter"]
 
 SIMPLE_JWT = {
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.IsAuthenticated',
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "tenant.auth0authentication.Auth0JSONWebTokenAuthentication",
     ),
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'tenant.auth0authentication.Auth0JSONWebTokenAuthentication',
-    ),
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-    'DEFAULT_PARSER_CLASSES': (
-        'rest_framework.parsers.JSONParser',
-    ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_PARSER_CLASSES": ("rest_framework.parsers.JSONParser",),
     # 'EXCEPTION_HANDLER': 'tenant.exception_handler.custom_exception_handler',
-
 }
 IMPORT_STRINGS = (
-    'JWT_ENCODE_HANDLER',
-    'JWT_DECODE_HANDLER',
-    'JWT_PAYLOAD_HANDLER',
-    'JWT_PAYLOAD_GET_USER_ID_HANDLER',
-    'JWT_PAYLOAD_GET_USERNAME_HANDLER',
-    'JWT_RESPONSE_PAYLOAD_HANDLER',
-    'JWT_GET_USER_SECRET_KEY',
+    "JWT_ENCODE_HANDLER",
+    "JWT_DECODE_HANDLER",
+    "JWT_PAYLOAD_HANDLER",
+    "JWT_PAYLOAD_GET_USER_ID_HANDLER",
+    "JWT_PAYLOAD_GET_USERNAME_HANDLER",
+    "JWT_RESPONSE_PAYLOAD_HANDLER",
+    "JWT_GET_USER_SECRET_KEY",
 )
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = "UTC"
 
 USE_I18N = True
 
 USE_TZ = True
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Static Files
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
+STATIC_URL = "/static/"
 
 # Media Settings
-MEDIA_URL = '/files/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'files')
+MEDIA_URL = "/files/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "files")
 
 # sentry
 sentry_sdk.init(
@@ -198,5 +180,5 @@ sentry_sdk.init(
         DjangoIntegration(),
     ],
     traces_sample_rate=1.0,
-    send_default_pii=True
+    send_default_pii=True,
 )
