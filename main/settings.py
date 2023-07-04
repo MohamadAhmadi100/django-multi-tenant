@@ -1,18 +1,53 @@
-from pathlib import Path
 import os
+from pathlib import Path
+
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
-# from .config import SECRET_KEY
 from .config import setting
 
-setting.get_new_settings()
+setting.get_cached_configs()
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = setting.SECRET_KEY
+DEBUG = setting.DEBUG
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'core-cache',
+    }
+}
+CACHE_MIDDLEWARE_ALIAS = 'default'
+CACHE_MIDDLEWARE_SECONDS = 86400
+CACHE_MIDDLEWARE_KEY_PREFIX = ''
 
-DEBUG = True
+ALLOWED_HOSTS = ["*"]
+# CORS_ORIGIN_ALLOW_ALL = True
 
-ALLOWED_HOSTS = []
+CSRF_TRUSTED_ORIGINS = ["https://spov.p1ade.ir", "https://develop.spovdev.com"]
+CORS_ALLOWED_ORIGINS = [
+    "https://spov.p1ade.ir",
+    "https://develop.spovdev.com"
+]
+
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -26,10 +61,8 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "djoser",
     "corsheaders",
-    'drf_yasg',
     'rest_framework_simplejwt',
     'consul',
-
     # apps
     'tenant.apps.TenantConfig',
 ]
@@ -37,6 +70,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -44,8 +78,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'django.contrib.auth.middleware.RemoteUserMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    # 'tenant.middleware.TenantMiddleware',
+
 ]
 
 SWAGGER_SETTINGS = {
@@ -74,9 +107,6 @@ TEMPLATES = [
         },
     },
 ]
-
-AUTH_USER_MODEL = 'tenant.User'
-
 WSGI_APPLICATION = 'main.wsgi.application'
 DATABASES = {
     'default': {
@@ -92,13 +122,13 @@ DATABASES = {
             'sslcert': os.path.join(BASE_DIR, 'certificate/client-cert.pem'),
             'sslkey': os.path.join(BASE_DIR, 'certificate/client-key.pem'),
         },
+        "default": {
+            "CONN_MAX_AGE": 1800
+        }
     }
 }
+DATABASE_ROUTERS = ['tenant.router.OrganizationDatabaseRouter']
 
-AUTHENTICATION_BACKENDS = [
-    'tenant.auth_backends.Auth0Backend',
-
-]
 SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
@@ -151,11 +181,15 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = 'static/'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ORIGIN_ALLOW_ALL = True
+# Static Files
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
+
+# Media Settings
+MEDIA_URL = '/files/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'files')
 
 # sentry
 sentry_sdk.init(

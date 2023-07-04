@@ -42,7 +42,9 @@ MANIFEST
 *.pem
 pip-log.txt
 pip-delete-this-directory.txt
-certificate/
+certificate/client-cert.pem
+certificate/client-key.pem
+certificate/server-ca.pem
 htmlcov/
 .tox/
 .nox/
@@ -111,7 +113,8 @@ cython_debug/
 instance/*
 !instance/.gitignore
 
-
+static/
+!static/__init__.py
 .idea*
 .idea/**/workspace.xml
 .idea/**/tasks.xml
@@ -199,3 +202,7 @@ pip-selfcheck.json
 .ionide
 
 !.vscode/*.code-snippets
+
+
+#sonar
+.scannerwork/

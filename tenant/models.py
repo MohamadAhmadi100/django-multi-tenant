@@ -1,29 +1,54 @@
-import uuid
-
-from django.contrib.auth.models import AbstractUser
-from django.db import models, transaction
+from django.db import models
+from main.config import setting
 
 
-class Tenant(models.Model):
-    name = models.CharField(max_length=100)
-    auth0_tenant_id = models.CharField(max_length=100, unique=True)
+setting.get_cached_configs()
 
 
-class User(AbstractUser):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey(Tenant, related_name='users', on_delete=models.CASCADE)
+class Organization(models.Model):
+    name = models.CharField(max_length=50, default="sponix-user")
+    organization_id = models.CharField(max_length=100, unique=True, primary_key=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        db_table = 'users'
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.set_organization_id()
+
+    def set_organization_id(self):
+        return self.organization_id
+
+    @property
+    def is_manager(self):
+        if self.organization_id == setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
+            return True
+        return False
+
+
+class MainUser(models.Model):
+    user_id = models.CharField(unique=True, primary_key=True)
+    organization = models.ForeignKey(Organization, related_name='users', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField(default=False)
+
+    REQUIRED_FIELDS = ['user_id', 'organization_id']
 
     def __str__(self):
-        return f'({self.tenant.name}) - {self.username}'
+        return f"userID: {self.user_id} organization: {self.organization_id}"
 
+    @property
+    def is_authenticated(self):
+        if self.organization_id and self.user_id:
+            return True
+        return False
 
-class TenantRelatedModel(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tenant = models.ForeignKey('accounts.Tenant', related_name='%(class)s', on_delete=models.PROTECT, editable=False)
+    @property
+    def is_anonymous(self):
+        if not self.organization_id or not self.user_id:
+            return True
+        return False
 
-    class Meta:
-        abstract = True
+    @property
+    def is_staff(self):
+        if self.organization_id == setting.AUTH0_MANAGEMENT_ORGANIZATION_KEY:
+            return True
+        return False

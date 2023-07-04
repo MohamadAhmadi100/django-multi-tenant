@@ -1,83 +1,91 @@
-import json
-
-from auth0.authentication import GetToken
-from django.conf import settings
-from django.http import JsonResponse
-from rest_framework import status, permissions
-from rest_framework.decorators import api_view
-from rest_framework.permissions import BasePermission
+import requests
+import sentry_sdk
+from main.config import setting
+from rest_framework import permissions
+from rest_framework import status
+from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from main.config import setting
-from .serializers import TenantSerializer
+
+from .models import Organization, MainUser
+from .serializers import OrganizationSerializer, MainUserSerializer
 
 
-def trigger_error(request):
-    division_by_zero = 1 / 0
-
-
-@api_view(['POST'])
-def login(request):
-    trigger_error(request)
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-
+class ListUsersView(APIView):
+    def get(self, request):
         try:
-            auth0_domain = settings.AUTH0_DOMAIN
-            auth0_client_id = settings.AUTH0_CLIENT_ID
-            auth0_client_secret = settings.AUTH0_CLIENT_SECRET
-
-            auth0 = GetToken(domain=auth0_domain, client_id=auth0_client_id)
-            token_info = auth0.login(
-                username,
-                password,
-                audience=f'https://{auth0_domain}/api/v2/',
-                scope='openid profile email',
-            )
-
-            access_token = token_info['access_token']
-            id_token = token_info['id_token']
-            expires_in = token_info['expires_in']
-
-            return JsonResponse({
-                'access_token': access_token,
-                'id_token': id_token,
-                'expires_in': expires_in
-            })
+            organization_id = request.organization_id
+            organization = Organization.objects.filter(organization_id=organization_id).first()
+            if not organization:
+                return Response({"error": "Organization not found."}, status=status.HTTP_404_NOT_FOUND)
+            users = organization.users.all()
+            serializer = MainUserSerializer(users, many=True)
+            return Response(serializer.data)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            sentry_sdk.capture_exception(e)
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
-class CustomPermission(BasePermission):
-    def has_permission(self, request, view):
-        return 'admin' in request.user.role
+class RetrieveUserView(APIView):
+    def get(self, request):
+        try:
+            organization_id = request.organization_id
+            user_id = request.user_id
+            organization = Organization.objects.filter(organization_id=organization_id).first()
+            if not organization:
+                return Response({"error": "Organization not found."}, status=status.HTTP_404_NOT_FOUND)
+            user = MainUser.objects.filter(user_id=user_id, organization=organization).first()
+            if not user:
+                return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = MainUserSerializer(user)
+            return Response(serializer.data)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
-class TenantData(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+class RetrieveOrganizationView(APIView):
+    def get(self, request):
+        try:
+            organization_id = request.organization_id
+            organization = Organization.objects.filter(organization_id=organization_id).first()
+            if not organization:
+                return Response({"error": "Organization not found."}, status=status.HTTP_404_NOT_FOUND)
+            serializer = OrganizationSerializer(organization)
+            return Response(serializer.data)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+class ListOrganizationsView(APIView):
+    permission_classes = [IsAdminUser]
 
     def get(self, request):
-        if hasattr(request, 'tenant') and request.tenant:
-            serializer = TenantSerializer(request.tenant)
+        try:
+            organizations = Organization.objects.all()
+            serializer = OrganizationSerializer(organizations, many=True)
             return Response(serializer.data)
-        else:
-            return Response({'error': 'Tenant not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class ConfigView(APIView):
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
         try:
-            configs = setting.get_cached_configs()
-            return Response({"message": configs}, status=status.HTTP_200_OK)
+            configs = setting.get_client_response()
+            return Response(configs, status=status.HTTP_200_OK)
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class RefreshConsulConfigView(APIView):
+    authentication_classes = []
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
@@ -85,4 +93,27 @@ class RefreshConsulConfigView(APIView):
             setting.get_new_settings()
             return Response({'message': 'OK'}, status=status.HTTP_200_OK)
         except Exception as e:
+            sentry_sdk.capture_exception(e)
+            return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+
+class GetUserDetailsFromAuth0(APIView):
+
+    def get(self, request):
+        try:
+            access_token = request.headers.get('Authorization')
+
+            if not access_token:
+                return Response({"error": "Authorization header is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+            auth0_domain = setting.AUTH0_JWKS_URL.split("/")[2]
+            auth0_userinfo_url = f'https://{auth0_domain}/userinfo'
+            response = requests.get(auth0_userinfo_url, headers={'Authorization': access_token})
+
+            if response.status_code == 200:
+                return Response(response.json(), status=status.HTTP_200_OK)
+            else:
+                return Response(response.json(), status=response.status_code)
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
             return Response({'error': e.args}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
