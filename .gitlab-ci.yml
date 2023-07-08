@@ -19,11 +19,15 @@ sonarcloud-check:
   image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
+  services:
+    - name: docker:20-dind
+      alias: docker
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
   before_script:
+    - docker run -p 6379:6379 redis:latest
     - rm -f $ENV_FILE
     - touch $ENV_FILE
     - echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
