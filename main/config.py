@@ -1,10 +1,11 @@
 import base64
+import json
 import os
 from collections import defaultdict
 from pathlib import Path
 
 import consul
-from django.core.cache import cache
+import redis
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -45,6 +46,11 @@ class Setting:
         self.DATABASE_CLIENT_KEY_PATH = None
         self.DATABASE_SERVER_CA = self.variables.get("Spov/Database/SERVER_CA", None)
         self.DATABASE_SERVER_CA_PATH = None
+
+        # redis
+        self.REDIS_HOST = None
+        self.REDIS_PORT = None
+        self.REDIS_PASSWORD = None
         # sentry
         self.SENTRY_DSN = None
         self.TEST_MJ = None
@@ -137,6 +143,11 @@ class Setting:
             BASE_DIR, "certificate/server-ca.pem"
         )
 
+        self.REDIS_HOST = self.variables.get("Spov/Redis/REDIS_HOST", None)
+        self.REDIS_PORT = self.variables.get("Spov/Redis/REDIS_PORT", 6379)
+        self.REDIS_PASSWORD = self.variables.get("Spov/Redis/PASSWORD", None)
+        self.redis_conf()
+
         self.SENTRY_DSN = self.variables.get("Spov/Sentry/API_DSN", None)
         self.TEST_MJ = self.variables.get("mj", None)
 
@@ -144,9 +155,15 @@ class Setting:
         index, data = self.request_consul()
         return self.convert_binary_to_dict(data)
 
+    def redis_conf(self):
+        if self.REDIS_HOST:
+            return redis.Redis(host=self.REDIS_HOST, port=self.REDIS_PORT, db=0, password=self.REDIS_PASSWORD)
+
     def set_cache(self):
-        cache.delete("variables")
-        cache.set("variables", self.variables, 86400)
+        r = self.redis_conf()
+        if self.variables:
+            r.set("variables", json.dumps(self.variables))
+            r.expire("variables", 86400)
 
     def get_new_settings(self):
         self.refresh_variables()
@@ -155,7 +172,12 @@ class Setting:
         self.set_cache()
 
     def get_cached_configs(self):
-        variables = cache.get("variables")
+        variables = None
+        try:
+            r = self.redis_conf()
+            variables = json.loads(r.get("variables"))
+        except Exception as e:
+            ...
         if not variables:
             self.get_new_settings()
         else:

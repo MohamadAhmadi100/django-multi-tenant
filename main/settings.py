@@ -12,8 +12,11 @@ SECRET_KEY = setting.SECRET_KEY
 DEBUG = setting.DEBUG
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
-        "LOCATION": "core-cache",
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": f"redis://{setting.REDIS_HOST}:{setting.REDIS_PORT}/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
     }
 }
 CACHE_MIDDLEWARE_ALIAS = "default"
