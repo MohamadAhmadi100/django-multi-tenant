@@ -19,15 +19,17 @@ sonarcloud-check:
   image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
+  services:
+    - redis:latest
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
   before_script:
-    - apk update
-    - apk add redis # Install Redis (you can use the appropriate package manager for your system)
-    - redis-server &
-    - echo "localhost redis" | tee -a /etc/hosts
+    # - apk update
+    # - apk add redis # Install Redis (you can use the appropriate package manager for your system)
+    # - redis-server &
+    # - echo "localhost myredis" | tee -a /etc/hosts
     - rm -f $ENV_FILE
     - touch $ENV_FILE
     - echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
