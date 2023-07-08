@@ -163,8 +163,6 @@ class Setting:
         r = self.redis_conf()
         if self.variables:
             r.set("variables", json.dumps(self.variables))
-            print("///", self.variables.get("mj"))
-            logging.warning("///", self.variables.get("mj"))
             r.expire("variables", 86400)
 
     def get_new_settings(self):
@@ -178,8 +176,6 @@ class Setting:
         try:
             r = self.redis_conf()
             variables = json.loads(r.get("variables"))
-            print("******", variables.get("mj"))
-            logging.error("******", variables.get("mj"))
         except Exception as e:
             ...
         if not variables:

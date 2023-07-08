@@ -1,11 +1,10 @@
 import base64
+import json
 import logging
 
 import requests
-import sentry_sdk
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
-from django.core.cache import cache
 from jose import jwt
 from main.config import setting
 from rest_framework.authentication import BaseAuthentication
@@ -13,6 +12,8 @@ from rest_framework.exceptions import AuthenticationFailed
 
 from .management.commands.create_database import OrganizationDatabaseManager
 from .models import MainUser, Organization
+
+redis_client = setting.redis_conf()
 
 
 class Auth0JSONWebTokenAuthentication(BaseAuthentication):
@@ -32,10 +33,10 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         """
         Retrieve JWKS from Auth0
         """
-        jwks = cache.get("jwks")
+        jwks = json.loads(redis_client.get("jwks"))
         if not jwks:
             jwks = requests.get(setting.AUTH0_JWKS_URL).json()
-            cache.set("jwks", jwks, 86400)
+            redis_client.set("jwks", json.dumps(jwks))
         return jwks
 
     def get_public_key(self, kid):
