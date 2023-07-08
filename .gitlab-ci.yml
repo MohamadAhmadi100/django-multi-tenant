@@ -27,6 +27,7 @@ sonarcloud-check:
     - apk update
     - apk add redis # Install Redis (you can use the appropriate package manager for your system)
     - redis-server &
+    - echo "localhost redis" | tee -a /etc/hosts
     - rm -f $ENV_FILE
     - touch $ENV_FILE
     - echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
