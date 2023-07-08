@@ -157,7 +157,7 @@ class Setting:
 
     def redis_conf(self):
         if self.REDIS_HOST:
-            return redis.Redis(host=self.REDIS_HOST, port=self.REDIS_PORT, db=0, password=self.REDIS_PASSWORD)
+            return redis.Redis(host=self.REDIS_HOST, port=self.REDIS_PORT, db=0)
 
     def set_cache(self):
         r = self.redis_conf()
