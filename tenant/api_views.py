@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 
 from .models import Organization, MainUser
 from .serializers import OrganizationSerializer, MainUserSerializer
+from silk.profiling.profiler import silk_profile
 
 
 class ListUsersView(APIView):
@@ -63,6 +64,7 @@ class RetrieveUserView(APIView):
 
 
 class RetrieveOrganizationView(APIView):
+    @silk_profile(name='Retrieve Organization')
     def get(self, request):
         try:
             organization_id = request.organization_id
