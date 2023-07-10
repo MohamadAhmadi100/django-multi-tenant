@@ -119,7 +119,7 @@ DATABASES = {
             "sslcert": os.path.join(BASE_DIR, "certificate/client-cert.pem"),
             "sslkey": os.path.join(BASE_DIR, "certificate/client-key.pem"),
         },
-        "default": {"CONN_MAX_AGE": 1800},
+        "default": {"CONN_MAX_AGE": 10},
     }
 }
 DATABASE_ROUTERS = ["tenant.router.OrganizationDatabaseRouter"]
