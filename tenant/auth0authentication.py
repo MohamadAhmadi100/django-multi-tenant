@@ -33,8 +33,10 @@ class Auth0JSONWebTokenAuthentication(BaseAuthentication):
         """
         Retrieve JWKS from Auth0
         """
-        jwks = json.loads(redis_client.get("jwks"))
-        if not jwks:
+        cache_jwks = redis_client.get("jwks")
+        if cache_jwks:
+            jwks = json.loads(cache_jwks)
+        else:
             jwks = requests.get(setting.AUTH0_JWKS_URL).json()
             redis_client.set("jwks", json.dumps(jwks))
         return jwks
