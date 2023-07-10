@@ -68,7 +68,7 @@ class OrganizationDatabaseManager:
                     "RETRY_DELAY": 5,
                 },
                 "ATOMIC_REQUESTS": True,
-                "CONN_MAX_AGE": 1800,
+                "CONN_MAX_AGE": 10,
                 "AUTOCOMMIT": True,
                 "OPTIONS": {
                     "sslmode": "require",
@@ -82,7 +82,7 @@ class OrganizationDatabaseManager:
                         settings.BASE_DIR, "certificate/client-key.pem"
                     ),
                 },
-                "default": {"CONN_MAX_AGE": 1800},
+                "default": {"CONN_MAX_AGE": 10},
             }
             connections.databases[dbname] = conn_params
             self.connection = connections[dbname].cursor().connection
