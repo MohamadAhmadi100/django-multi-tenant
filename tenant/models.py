@@ -26,11 +26,13 @@ class Organization(models.Model):
 
 class MainUser(models.Model):
     user_id = models.CharField(unique=True, primary_key=True)
-    organization = models.ForeignKey(Organization, related_name='users', on_delete=models.CASCADE)
+    organization = models.ForeignKey(
+        Organization, related_name="users", on_delete=models.CASCADE
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(default=False)
 
-    REQUIRED_FIELDS = ['user_id', 'organization_id']
+    REQUIRED_FIELDS = ["user_id", "organization_id"]
 
     def __str__(self):
         return f"userID: {self.user_id} organization: {self.organization_id}"

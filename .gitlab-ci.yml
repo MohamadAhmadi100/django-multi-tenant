@@ -19,11 +19,17 @@ sonarcloud-check:
   image:
     name: sonarsource/sonar-scanner-cli:latest
     entrypoint: [""]
+  services:
+    - redis:latest
   cache:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
   before_script:
+    # - apk update
+    # - apk add redis # Install Redis (you can use the appropriate package manager for your system)
+    # - redis-server &
+    # - echo "localhost myredis" | tee -a /etc/hosts
     - rm -f $ENV_FILE
     - touch $ENV_FILE
     - echo CONSUL_HOST=$CONSUL_HOST >> $ENV_FILE
@@ -47,7 +53,7 @@ build_core_test:
   variables:
     DOCKER_DRIVER: overlay2
   before_script:
-    - apt-get update && apt-get install -y nano
+    - ls -la
     - echo "Writing GitLab variables to $ENV_FILE"
     - rm -f $ENV_FILE
     - touch $ENV_FILE
@@ -56,7 +62,8 @@ build_core_test:
     - echo SECRET_KEY=$SECRET_KEY >> $ENV_FILE
     - echo CONSUL_PORT=443 >> $ENV_FILE
     - echo "GitLab variables written to $ENV_FILE"
-    - ls
+    - ls -la
+    - cat $ENV_FILE
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
     # - docker build -f docker/Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG -t $CI_REGISTRY_IMAGE:latest .

@@ -8,7 +8,7 @@ def set_organization(organization):
 
 
 def get_organization():
-    return getattr(_thread_locals, 'organization', None)
+    return getattr(_thread_locals, "organization", None)
 
 
 class OrganizationDatabaseRouter:
@@ -17,7 +17,7 @@ class OrganizationDatabaseRouter:
         if organization:
             return organization.database_alias
         else:
-            return 'default'
+            return "default"
 
     def db_for_read(self, model, **hints):
         return self._get_db_alias()

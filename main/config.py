@@ -1,10 +1,11 @@
 import base64
+import json
 import os
 from collections import defaultdict
 from pathlib import Path
 
 import consul
-from django.core.cache import cache
+import redis
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,7 +19,7 @@ class Setting:
         self.CONSUL_PORT = os.getenv("CONSUL_PORT")
         self.CONSUL_TOKEN = os.getenv("CONSUL_TOKEN")
         self.DEBUG: bool = True if os.getenv("DEBUG_MODE") == "true" else False
-        self.SECRET_KEY: str = os.getenv('SECRET_KEY')
+        self.SECRET_KEY: str = os.getenv("SECRET_KEY")
         self.variables = dict()
         # auth0
         self.AUTH0_CLIENT_ID = None
@@ -37,12 +38,19 @@ class Setting:
         self.DATABASE_PASSWORD = None
         self.DATABASE_HOST = None
         self.DATABASE_PORT = None
-        self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
+        self.DATABASE_CLIENT_CERT = self.variables.get(
+            "Spov/Database/CLIENT_CERT", None
+        )
         self.DATABASE_CLIENT_CERT_PATH = None
         self.DATABASE_CLIENT_KEY = self.variables.get("Spov/Database/CLIENT_KEY", None)
         self.DATABASE_CLIENT_KEY_PATH = None
         self.DATABASE_SERVER_CA = self.variables.get("Spov/Database/SERVER_CA", None)
         self.DATABASE_SERVER_CA_PATH = None
+
+        # redis
+        self.REDIS_HOST = None
+        self.REDIS_PORT = None
+        self.REDIS_PASSWORD = None
         # sentry
         self.SENTRY_DSN = None
         self.TEST_MJ = None
@@ -67,18 +75,19 @@ class Setting:
             port=self.CONSUL_PORT,
             token=self.CONSUL_TOKEN,
             scheme="https",
-            verify=True)
+            verify=True,
+        )
         index, data = consul_client.kv.get(key="", recurse=True)
         return index, data
 
     def convert_binary_to_dict(self, data):
         for item in data:
-            key = item['Key']
-            value = item['Value']
+            key = item["Key"]
+            value = item["Value"]
             if value:
-                value = value.decode('utf-8')
+                value = value.decode("utf-8")
                 if type(value) == bytes:
-                    value += '=' * ((4 - len(value) % 4) % 4)
+                    value += "=" * ((4 - len(value) % 4) % 4)
                     value = base64.b64decode(value)
             self.variables[key] = value
         return self.variables
@@ -86,28 +95,58 @@ class Setting:
     def set_values(self):
         # auth0
         self.AUTH0_CLIENT_ID = self.variables.get("Spov/Authentication/CLIENT_ID", None)
-        self.AUTH0_CLIENT_SECRET = self.variables.get("Spov/Authentication/CLIENT_SECRET", None)
+        self.AUTH0_CLIENT_SECRET = self.variables.get(
+            "Spov/Authentication/CLIENT_SECRET", None
+        )
         self.AUTH0_AUDIENCE = self.variables.get("Spov/Authentication/AUDIENCE", None)
-        self.AUTH0_AUTHORIZATION_URL = self.variables.get("Spov/Authentication/AUTHORIZATION_URL", None)
+        self.AUTH0_AUTHORIZATION_URL = self.variables.get(
+            "Spov/Authentication/AUTHORIZATION_URL", None
+        )
         self.AUTH0_JWKS_URL = self.variables.get("Spov/Authentication/JWKS_URL", None)
-        self.AUTH0_MANAGEMENT_ORGANIZATION_KEY = self.variables.get("Spov/Authentication/MANAGEMENT_ORGANIZATION_KEY",
-                                                                    None)
+        self.AUTH0_MANAGEMENT_ORGANIZATION_KEY = self.variables.get(
+            "Spov/Authentication/MANAGEMENT_ORGANIZATION_KEY", None
+        )
         self.AUTH0_TOKEN_URL = self.variables.get("Spov/Authentication/TOKEN_URL", None)
-        self.AUTH0_CALLBACK_URL = self.variables.get("Spov/Authentication/CALLBACK_URL", None)
+        self.AUTH0_CALLBACK_URL = self.variables.get(
+            "Spov/Authentication/CALLBACK_URL", None
+        )
         self.AUTH0_LOGIN_URL = self.variables.get("Spov/Authentication/LOGIN_URL", None)
-        self.AUTH0_LOGOUT_URL = self.variables.get("Spov/Authentication/LOGOUT_URL", None)
+        self.AUTH0_LOGOUT_URL = self.variables.get(
+            "Spov/Authentication/LOGOUT_URL", None
+        )
         # database
-        self.DATABASE_NAME = self.variables.get("Spov/Database/NAME", None)
-        self.DATABASE_USER = self.variables.get("Spov/Database/USERNAME", None)
-        self.DATABASE_PASSWORD = self.variables.get("Spov/Database/PASSWORD", None)
-        self.DATABASE_HOST = self.variables.get("Spov/Database/HOST", None)
+        self.DATABASE_NAME = self.variables.get(
+            "Spov/Database/NAME", None
+        )
+        self.DATABASE_USER = self.variables.get(
+            "Spov/Database/USERNAME", None
+        )
+        self.DATABASE_PASSWORD = self.variables.get(
+            "Spov/Database/PASSWORD", None
+        )
+        self.DATABASE_HOST = self.variables.get(
+            "Spov/Database/HOST", None
+        )
         self.DATABASE_PORT = self.variables.get("Spov/Database/PORT", 5432)
-        self.DATABASE_CLIENT_CERT = self.variables.get("Spov/Database/CLIENT_CERT", None)
-        self.DATABASE_CLIENT_CERT_PATH = os.path.join(BASE_DIR, 'certificate/client-cert.pem')
+        self.DATABASE_CLIENT_CERT = self.variables.get(
+            "Spov/Database/CLIENT_CERT", None
+        )
+        self.DATABASE_CLIENT_CERT_PATH = os.path.join(
+            BASE_DIR, "certificate/client-cert.pem"
+        )
         self.DATABASE_CLIENT_KEY = self.variables.get("Spov/Database/CLIENT_KEY", None)
-        self.DATABASE_CLIENT_KEY_PATH = os.path.join(BASE_DIR, 'certificate/client-key.pem')
+        self.DATABASE_CLIENT_KEY_PATH = os.path.join(
+            BASE_DIR, "certificate/client-key.pem"
+        )
         self.DATABASE_SERVER_CA = self.variables.get("Spov/Database/SERVER_CA", None)
-        self.DATABASE_SERVER_CA_PATH = os.path.join(BASE_DIR, "certificate/server-ca.pem")
+        self.DATABASE_SERVER_CA_PATH = os.path.join(
+            BASE_DIR, "certificate/server-ca.pem"
+        )
+
+        self.REDIS_HOST = self.variables.get("Spov/Redis/REDIS_HOST", None)
+        self.REDIS_PORT = self.variables.get("Spov/Redis/REDIS_PORT", 6379)
+        self.REDIS_PASSWORD = self.variables.get("Spov/Redis/PASSWORD", None)
+        self.redis_conf()
 
         self.SENTRY_DSN = self.variables.get("Spov/Sentry/API_DSN", None)
         self.TEST_MJ = self.variables.get("mj", None)
@@ -116,9 +155,15 @@ class Setting:
         index, data = self.request_consul()
         return self.convert_binary_to_dict(data)
 
+    def redis_conf(self):
+        if self.REDIS_HOST:
+            return redis.Redis(host=self.REDIS_HOST, port=self.REDIS_PORT, db=0)
+
     def set_cache(self):
-        cache.delete("variables")
-        cache.set("variables", self.variables, 86400)
+        r = self.redis_conf()
+        if self.variables:
+            r.set("variables", json.dumps(self.variables))
+            r.expire("variables", 86400)
 
     def get_new_settings(self):
         self.refresh_variables()
@@ -127,7 +172,12 @@ class Setting:
         self.set_cache()
 
     def get_cached_configs(self):
-        variables = cache.get("variables")
+        variables = None
+        try:
+            r = self.redis_conf()
+            variables = json.loads(r.get("variables"))
+        except Exception as e:
+            ...
         if not variables:
             self.get_new_settings()
         else:
@@ -151,7 +201,7 @@ class Setting:
             if not value:
                 continue
 
-            split_key = key.split('/')
+            split_key = key.split("/")
             if len(split_key) < 3:
                 api_output[split_key[0]] = value
                 continue
@@ -164,5 +214,5 @@ class Setting:
 
 
 setting = Setting()
-if __name__ == '__main__':
+if __name__ == "__main__":
     setting.get_new_settings()

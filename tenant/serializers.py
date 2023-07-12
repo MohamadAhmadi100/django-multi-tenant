@@ -6,7 +6,7 @@ from .models import Organization, MainUser
 class MainUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = MainUser
-        fields = ['user_id', 'created_at', 'active']
+        fields = ["user_id", "created_at", "active"]
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
@@ -14,4 +14,4 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Organization
-        fields = ['name', 'organization_id', 'created_at', 'users']
+        fields = ["name", "organization_id", "created_at", "users"]
